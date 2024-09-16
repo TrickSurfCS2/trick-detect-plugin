@@ -1,21 +1,25 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Modules.Utils;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 using TrickDetect.Database;
-using Microsoft.Extensions.Logging;
+using TrickDetect.Managers;
 
 namespace TrickDetect;
 
-public class ConnectionHandler(DB database)
+public class ConnectionModule(DB database, PlayerManager playerManager)
 {
-    private readonly DB database = database;
+    private readonly DB _database = database;
+    private readonly PlayerManager _playerManager = playerManager;
 
     public void OnPlayerConnect(EventOnPlayerConnect e)
     {
+        TrickDetect._logger!.LogInformation("OnPlayerConnect");
         _ = Task.Run(async () =>
         {
             try
             {
+                TrickDetect._logger!.LogInformation("1");
                 string query = @"
                     INSERT INTO public.""user"" (steamid, username) 
                     VALUES (@steamid, @username) 
@@ -26,12 +30,12 @@ public class ConnectionHandler(DB database)
                 var parameters = new NpgsqlParameter[]
                 {
                     new("@steamid", e.SteamId),
-                    new("@username",  e.Name)
+                    new("@username", e.Name)
                 };
 
-                int userId = await database.ExecuteAsync(query, parameters);
+                int userId = await _database.ExecuteAsync(query, parameters);
 
-                int points = await database.QueryAsync<int>(@"
+                int points = await _database.QueryAsync<int>(@"
                     SELECT SUM(t.""point"") AS points
                     FROM (
                         SELECT DISTINCT(c.""trickId"") as id
@@ -42,6 +46,11 @@ public class ConnectionHandler(DB database)
                     ",
                     [new("@userId", userId)]
                 );
+
+                TrickDetect._logger!.LogInformation($"points {points}");
+
+                var player = new Player(e.Slot, e.SteamId, e.Name);
+                _playerManager.AddPlayer(player);
 
                 Server.NextFrame(() =>
                 {
@@ -59,6 +68,11 @@ public class ConnectionHandler(DB database)
     {
         if (e.SteamId == null)
             return;
+
+        var client = Utilities.GetPlayerFromSlot(e.Slot);
+
+        if (client != null)
+            _playerManager.RemovePlayer(client);
 
         Server.NextFrame(() =>
         {

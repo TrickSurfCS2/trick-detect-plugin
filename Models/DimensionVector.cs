@@ -2,11 +2,18 @@ using CounterStrikeSharp.API.Modules.Utils;
 
 namespace TrickDetect;
 
-public class DimensionVector(float x, float y, float z)
+public class Location
 {
-  public float X { get; set; } = x;
-  public float Y { get; set; } = y;
-  public float Z { get; set; } = z;
+  public required DimensionVector origin { get; set; }
+  public required DimensionVector angle { get; set; }
+  public required DimensionVector velocity { get; set; }
+}
+
+public class DimensionVector
+{
+  public required float X { get; set; }
+  public required float Y { get; set; }
+  public required float Z { get; set; }
 
   public Vector ToVector()
   {

@@ -10,6 +10,7 @@ public partial class TrickDetect
   {
     RegisterListener<Listeners.OnMapStart>(OnMapStart);
     RegisterListener<Listeners.OnGameServerSteamAPIActivated>(OnGameServerSteamAPIActivated);
+    RegisterListener<Listeners.OnTick>(() => { _eventsManager.Publish(new EventOnTickEvent()); });
 
     // Events
     RegisterEventHandler<EventPlayerConnectFull>((@event, info) =>
@@ -19,18 +20,14 @@ public partial class TrickDetect
       if (client == null || !client.IsValid || client.IsBot || !client.UserId.HasValue)
         return HookResult.Continue;
 
-
       var eventMsg = new EventOnPlayerConnect
       {
-        UserId = client.UserId.Value,
-        Slot = client.Slot,
-        SteamId3 = client.NativeSteamId3(),
-        SteamId = client.SteamID.ToString(),
         Name = client.PlayerName,
-        IpAddress = client.IpAddress!.Split(":")[0]
+        Slot = client.Slot,
+        SteamId = client.SteamID.ToString()
       };
 
-      _eventsObserver.Publish(eventMsg);
+      _eventsManager.Publish(eventMsg);
 
       return HookResult.Continue;
     });
@@ -41,7 +38,8 @@ public partial class TrickDetect
       {
         Server.NextFrame(() =>
         {
-          Server.ExecuteCommand("mp_humanteam             CT");
+          // Server.ExecuteCommand("mp_humanteam             CT");
+          Server.ExecuteCommand("sv_cheats                1");
           Server.ExecuteCommand("mp_buytime               0");
           Server.ExecuteCommand("mp_roundtime             9999");
           Server.ExecuteCommand("sv_friction              4");
@@ -49,7 +47,7 @@ public partial class TrickDetect
           Server.ExecuteCommand("sv_accelerate            10");
           Server.ExecuteCommand("sv_airaccelerate         9999");
           Server.ExecuteCommand("sv_maxvelocity           3500");
-          Server.ExecuteCommand("sv_maxspeed              3500");
+          Server.ExecuteCommand("sv_maxspeed              400");
           Server.ExecuteCommand("sv_wateraccelerate       2000");
           Server.ExecuteCommand("sv_stopspeed             100");
           Server.ExecuteCommand("sv_falldamage_scale      0");
@@ -89,7 +87,7 @@ public partial class TrickDetect
           PlayerSlot = client.Slot
         };
 
-        _eventsObserver.Publish(eventMsg);
+        _eventsManager.Publish(eventMsg);
       }
 
       return HookResult.Continue;
@@ -119,7 +117,7 @@ public partial class TrickDetect
           PlayerSlot = client.Slot
         };
 
-        _eventsObserver.Publish(eventMsg);
+        _eventsManager.Publish(eventMsg);
       }
 
       return HookResult.Continue;

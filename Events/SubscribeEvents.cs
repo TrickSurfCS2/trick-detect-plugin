@@ -1,19 +1,16 @@
-using TrickDetect.Database;
-
 namespace TrickDetect;
 
 public partial class TrickDetect
 {
-  private void SubscribeEvents(DB database)
+  private static void SubscribeEvents()
   {
-    var connectionHandler = new ConnectionHandler(database);
-    var adHandler = new AdHandler();
+    var connectionHandler = new ConnectionModule(_database, _playerManager);
+    var adHandler = new AdModule();
+    var hudHandler = new HudModule(_playerManager);
 
-    if (_eventsObserver != null)
-    {
-      _eventsObserver.Subscribe<EventOnPlayerConnect>(connectionHandler.OnPlayerConnect);
-      _eventsObserver.Subscribe<EventOnPlayerDisconnect>(connectionHandler.OnPlayerDisconnect);
-      _eventsObserver.Subscribe<EventSendAd>(adHandler.SendAdToChat);
-    }
+    _eventsManager.Subscribe<EventOnPlayerConnect>(connectionHandler.OnPlayerConnect);
+    _eventsManager.Subscribe<EventOnPlayerDisconnect>(connectionHandler.OnPlayerDisconnect);
+    _eventsManager.Subscribe<EventSendAd>(adHandler.SendAdToChat);
+    _eventsManager.Subscribe<EventOnTickEvent>(hudHandler.OnTickEvent);
   }
 }

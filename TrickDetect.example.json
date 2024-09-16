@@ -3,5 +3,5 @@
   "DatabaseName": "surfgxds_dev",
   "DatabaseUser": "surfgxds",
   "DatabasePassword": "surfgxds",
-  "DatabasePort": "5432"
+  "DatabasePort": 5432
 }

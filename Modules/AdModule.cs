@@ -3,9 +3,7 @@ using CounterStrikeSharp.API.Modules.Utils;
 
 namespace TrickDetect;
 
-public class EventSendAd { }
-
-public class AdHandler
+public class AdModule
 {
     public void SendAdToChat(EventSendAd _)
     {

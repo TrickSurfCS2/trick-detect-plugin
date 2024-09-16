@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Logging;
 
-namespace TrickDetect;
+namespace TrickDetect.Managers;
 
-public class EventsObserver
+public class EventManager
 {
     private readonly Dictionary<Type, List<Action<object>>> _syncSubscribers = new();
 

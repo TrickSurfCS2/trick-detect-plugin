@@ -1,12 +1,11 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Timers;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using TrickDetect.Config;
 using TrickDetect.Database;
+using TrickDetect.Managers;
 
 namespace TrickDetect;
 
@@ -20,7 +19,8 @@ public partial class TrickDetect : BasePlugin, IPluginConfig<TrickDetectConfig>
   public static TrickDetect Instance { get; private set; } = new();
   public TrickDetectConfig Config { get; set; } = new();
 
-  private static EventsObserver _eventsObserver = new();
+  private static PlayerManager _playerManager = new();
+  private static EventManager _eventsManager = new();
   private static DB _database = new(null);
   internal static ILogger? _logger;
 
@@ -28,14 +28,16 @@ public partial class TrickDetect : BasePlugin, IPluginConfig<TrickDetectConfig>
   {
     Instance = this;
     _logger = Logger;
-    _eventsObserver = new EventsObserver();
 
-    SubscribeEvents(_database);
+    _playerManager = new PlayerManager();
+    _eventsManager = new EventManager();
+
+    SubscribeEvents();
     RegisterEvents();
 
     AddTimer(45f, () =>
     {
-      _eventsObserver.Publish(new EventSendAd());
+      _eventsManager.Publish(new EventSendAd());
     }, TimerFlags.REPEAT);
 
     if (hotReload)
