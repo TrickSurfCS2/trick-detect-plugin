@@ -83,11 +83,8 @@ public class TrickManager(DB database)
   }
 
 
-  public void RouteExistChecker(Player player)
+  public void RouteChecker(Player player)
   {
-    if (player.Client.IsBot)
-      return;
-
     if (player.Debug)
     {
       player.Client.PrintToConsole(" ");
@@ -101,7 +98,7 @@ public class TrickManager(DB database)
     foreach (var trick in tricks)
     {
       var trickRoute = trick.GetRouteTriggerPath();
-      if (trickRoute.Contains(player.RouteTriggerPath) && player.StartSpeed == trick.StartType)
+      if (trickRoute.Contains(player.RouteTriggerPath) && player.StartType == trick.StartType)
       {
         if (player.Debug)
           player.Client.PrintToConsole($"CONTAIN >> {trick.Name} | {trickRoute}");
@@ -120,34 +117,18 @@ public class TrickManager(DB database)
       player.Client.PrintToConsole(" ");
     }
 
-    if (containTricks == 0 && !string.IsNullOrEmpty(player.RouteTriggerPath))
-      TrimRouteTriggers(player);
-  }
-
-  public void TrimRouteTriggers(Player player)
-  {
-    player.StartType = StartType.Velocity;
-    player.RouteTriggers.RemoveAt(player.RouteTriggers.Count - 1);
-
     if (string.IsNullOrEmpty(player.RouteTriggerPath))
     {
       player.ResetTrickProgress();
       return;
     }
 
-    Trick[] tricks = GetTrickByMap(player.SelectedMap);
-
-    foreach (var trick in tricks)
+    if (containTricks == 0)
     {
-      var trickRoute = trick.GetRouteTriggerPath();
-      if (trickRoute.Contains(player.RouteTriggerPath))
-      {
-        RouteExistChecker(player);
-        return;
-      }
+      player.StartType = StartType.Velocity;
+      player.RouteTriggers.RemoveAt(player.RouteTriggers.Count - 1);
+      RouteChecker(player);
     }
-
-    TrimRouteTriggers(player);
   }
 
   public void CompleteTrick(Player player, Trick trick)

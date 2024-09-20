@@ -14,17 +14,7 @@ public class TriggerTouchModule(TriggerManager triggerManager, TrickManager tric
         if (trigger == null)
             return;
 
-        if (player.RouteTriggers.Count <= 1)
-        {
-            // TODO reset speed and time
-            player.StartSpeed = player.Client.GetSpeed();
-
-            player.StartType = player.StartSpeed > 405
-                ? StartType.PreStrafe
-                : player.StartType = StartType.Velocity;
-        }
-
-        player.RouteTriggers.Add(trigger);
+        trickManager.RouteChecker(player);
     }
 
     public void OnPlayerEndTouch(EventOnEndTouchEvent e)
@@ -37,7 +27,15 @@ public class TriggerTouchModule(TriggerManager triggerManager, TrickManager tric
         if (trigger == null)
             return;
 
-        var isTrickExist = trickManager.RouteExistChecker(player)
+        if (player.RouteTriggers.Count <= 1)
+        {
+            // TODO reset speed and time
+            player.StartSpeed = player.Client.GetSpeed();
+
+            player.StartType = player.StartSpeed > 405
+                ? StartType.PreStrafe
+                : player.StartType = StartType.Velocity;
+        }
 
         player.RouteTriggers.Add(trigger);
     }

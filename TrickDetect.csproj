@@ -10,20 +10,20 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CounterStrikeSharp.API" Version="1.0.264" />
+    <PackageReference Include="CounterStrikeSharp.API" Version="1.0.265" />
     <PackageReference Include="Dapper" Version="2.1.35" />
     <PackageReference Include="Npgsql" Version="8.0.3" />
   </ItemGroup>
 
   <!-- Добавляем задачу копирования файлов после сборки -->
-  <!-- <Target Name="CopyFilesAfterBuild" AfterTargets="Build">
+  <Target Name="CopyFilesAfterBuild" AfterTargets="Build">
     <ItemGroup>
       <SourceFiles Include="$(OutputPath)**\*.*" />
     </ItemGroup>
 
-    <Copy SourceFiles="@(SourceFiles)" DestinationFolder="/home/injurka/.steam/steamcmd/cs22/game/csgo/addons/counterstrikesharp/plugins/TrickDetect/%(RecursiveDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
+    <Copy SourceFiles="@(SourceFiles)" DestinationFolder="/run/media/evai/KINGSTON/Steam/game/csgo/addons/counterstrikesharp/plugins/TrickDetect/%(RecursiveDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
 
-    <Message Text="Files copied from $(OutputPath) to /home/injurka/.steam/steamcmd/cs22/game/csgo/addons/counterstrikesharp/plugins/TrickDetect." Importance="high" />
-  </Target> -->
+    <Message Text="Files copied from $(OutputPath) to /run/media/evai/KINGSTON/Steam/game/csgo/addons/counterstrikesharp/plugins/TrickDetect." Importance="high" />
+  </Target> 
 
 </Project>
