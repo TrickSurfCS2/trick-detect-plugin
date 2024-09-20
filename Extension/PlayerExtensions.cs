@@ -19,4 +19,8 @@ public static class PlayerExtensions
 
 		return steamId3;
 	}
+	public static double GetSpeed(this CCSPlayerController client)
+	{
+		return Math.Round(client.PlayerPawn.Value!.AbsVelocity.Length2D());
+	}
 }

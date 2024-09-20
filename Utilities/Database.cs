@@ -1,6 +1,8 @@
+using Dapper;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using System.Data;
+using System.Threading.Tasks;
 
 namespace TrickDetect.Database;
 
@@ -52,61 +54,39 @@ public class DB(string? dbConnectionString)
 		}
 	}
 
-	public int Execute(string query, NpgsqlParameter[]? parameters = null)
+	public int Execute(string query, object? parameters = null)
 	{
 		using var connection = GetConnection();
-		using var command = new NpgsqlCommand(query, connection);
-
-		if (parameters != null)
-			command.Parameters.AddRange(parameters);
-
-		return command.ExecuteNonQuery();
+		return connection.Execute(query, parameters);
 	}
 
-	public async Task<int> ExecuteAsync(string query, NpgsqlParameter[]? parameters = null)
+	public async Task<int> ExecuteAsync(string query, object? parameters = null)
 	{
 		using var connection = await GetConnectionAsync();
-		using var command = new NpgsqlCommand(query, connection);
-
-		if (parameters != null)
-			command.Parameters.AddRange(parameters);
-
-		return await command.ExecuteNonQueryAsync();
+		return await connection.ExecuteAsync(query, parameters);
 	}
 
-	public T? Query<T>(string query, NpgsqlParameter[]? parameters = null)
+	public T? QuerySingle<T>(string query, object? parameters = null)
 	{
 		using var connection = GetConnection();
-		using var command = new NpgsqlCommand(query, connection);
-
-		if (parameters != null)
-			command.Parameters.AddRange(parameters);
-
-		using var reader = command.ExecuteReader();
-		if (reader.Read())
-		{
-			var value = reader[0];
-			return (T)Convert.ChangeType(value, typeof(T));
-		}
-
-		return default(T);
+		return connection.QuerySingleOrDefault<T>(query, parameters);
 	}
 
-	public async Task<T?> QueryAsync<T>(string query, NpgsqlParameter[]? parameters = null)
+	public async Task<T?> QuerySingleAsync<T>(string query, object? parameters = null)
 	{
 		using var connection = await GetConnectionAsync();
-		using var command = new NpgsqlCommand(query, connection);
+		return await connection.QuerySingleOrDefaultAsync<T>(query, parameters);
+	}
 
-		if (parameters != null)
-			command.Parameters.AddRange(parameters);
+	public IEnumerable<T> Query<T>(string query, object? parameters = null)
+	{
+		using var connection = GetConnection();
+		return connection.Query<T>(query, parameters);
+	}
 
-		using var reader = await command.ExecuteReaderAsync();
-		if (await reader.ReadAsync())
-		{
-			var value = reader[0];
-			return (T)Convert.ChangeType(value, typeof(T));
-		}
-
-		return default(T);
+	public async Task<IEnumerable<T>> QueryAsync<T>(string query, object? parameters = null)
+	{
+		using var connection = await GetConnectionAsync();
+		return await connection.QueryAsync<T>(query, parameters);
 	}
 }

@@ -10,13 +10,13 @@ public class EventSendAd { }
 public class EventOnStartTouchEvent
 {
   public required string? TriggerName { get; init; }
-  public required int PlayerSlot { get; init; }
+  public required Player Player { get; init; }
 }
 
 public class EventOnEndTouchEvent
 {
   public required string? TriggerName { get; init; }
-  public required int PlayerSlot { get; init; }
+  public required Player Player { get; init; }
 }
 
 
