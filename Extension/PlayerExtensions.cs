@@ -1,4 +1,5 @@
 ﻿using CounterStrikeSharp.API.Core;
+using System.Drawing;
 
 namespace TrickDetect;
 
@@ -22,5 +23,15 @@ public static class PlayerExtensions
 	public static double GetSpeed(this CCSPlayerController client)
 	{
 		return Math.Round(client.PlayerPawn.Value!.AbsVelocity.Length2D());
+	}
+
+	public static void HideLegs(this CCSPlayerController client)
+	{
+		client.PlayerPawn.Value!.Render = Color.FromArgb(
+			254,
+			client.PlayerPawn.Value.Render.R,
+			client.PlayerPawn.Value.Render.G,
+			client.PlayerPawn.Value.Render.B
+		);
 	}
 }

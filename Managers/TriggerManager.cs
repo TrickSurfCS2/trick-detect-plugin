@@ -5,27 +5,26 @@ namespace TrickDetect.Managers;
 
 public class TriggerManager(DB database)
 {
-  private readonly Dictionary<Map, Trigger[]> _tiggers = new();
+  private readonly Dictionary<Map, Trigger[]> _triggers = new();
 
-  public Trigger[] GetMapTriggers(Map map)
+  public Trigger[] GetTriggersByMap(Map map)
   {
-    return _tiggers.GetValueOrDefault(map)!;
+    return _triggers.GetValueOrDefault(map)!;
   }
 
   public void SetMapTriggers(Map map, Trigger[] triggers)
   {
-    _tiggers.Add(map, triggers);
+    _triggers.Add(map, triggers);
   }
 
   // Api
-  public async Task<Trigger[]> LoadMapTriggers(Map map)
+  public async Task LoadAndSetMapTriggers(Map map)
   {
     var triggers = await database.QueryAsync<Trigger>(@"
       SELECT 
         id AS ""Id"",
         name AS ""Name"",
         ""fullName"" AS ""FullName"",
-        coords AS ""Origin"",
         preview AS ""PreviewImage"",
         ""createdAt"" AS ""CreatedAt"",
         ""updatedAt"" AS ""UpdatedAt""
@@ -35,6 +34,6 @@ public class TriggerManager(DB database)
       new { mapId = map.Id }
       );
 
-    return triggers.ToArray();
+    _triggers[map] = triggers.ToArray();
   }
 }

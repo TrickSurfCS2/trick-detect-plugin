@@ -1,30 +1,11 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 namespace TrickDetect;
 internal class Helpers
 {
-	private static readonly string AssemblyName = Assembly.GetExecutingAssembly().GetName().Name ?? "";
-	private static readonly string CfgPath = $"{Server.GameDirectory}/csgo/addons/counterstrikesharp/configs/plugins/{AssemblyName}/{AssemblyName}.json";
-
-	public delegate nint CNetworkSystem_UpdatePublicIp(nint a1);
-	public static CNetworkSystem_UpdatePublicIp? _networkSystemUpdatePublicIp;
-
-	public static bool IsDebugBuild
-	{
-		get
-		{
-#if DEBUG
-			return true;
-#else
-				return false;
-#endif
-		}
-	}
 
 	public static List<CCSPlayerController> GetPlayerFromName(string name)
 	{
@@ -116,24 +97,21 @@ internal class Helpers
 		return time.Days > 0 ? $"{time.Days}d {time.Hours}h {time.Minutes}m" : time.Hours > 0 ? $"{time.Hours}h {time.Minutes}m" : $"{time.Minutes}m";
 	}
 
-	public static string GetServerIp()
-	{
-		var networkSystem = NativeAPI.GetValveInterface(0, "NetworkSystemVersion001");
-
-		unsafe
-		{
-			if (_networkSystemUpdatePublicIp == null)
-			{
-				var funcPtr = *(nint*)(*(nint*)(networkSystem) + 256);
-				_networkSystemUpdatePublicIp = Marshal.GetDelegateForFunctionPointer<CNetworkSystem_UpdatePublicIp>(funcPtr);
-			}
-			var ipBytes = (byte*)(_networkSystemUpdatePublicIp(networkSystem) + 4);
-			return $"{ipBytes[0]}.{ipBytes[1]}.{ipBytes[2]}.{ipBytes[3]}";
-		}
-	}
-
 	public static bool ClientIsValidAndAlive(CCSPlayerController? client)
 	{
-		return client != null && client is { IsValid: true, IsBot: false, PawnIsAlive: true };
+		return client != null
+			&& client.IsValid
+			&& !client.IsBot
+			&& client.UserId.HasValue
+			&& client is { IsValid: true, IsBot: false, PawnIsAlive: true };
+	}
+
+	public static bool ClientIsValid(CCSPlayerController? client)
+	{
+		return client != null
+			&& client.IsValid
+			&& !client.IsBot
+			&& client.UserId.HasValue
+			&& client is { IsValid: true, IsBot: false };
 	}
 }

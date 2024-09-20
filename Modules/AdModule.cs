@@ -9,7 +9,7 @@ public class AdModule
     {
         Server.NextFrame(() =>
         {
-            Server.PrintToChatAll($" {ChatColors.Blue} Приветствуем вас воин!");
+            Server.PrintToChatAll($" {ChatColors.Gold} SurfGxds {ChatColors.Blue} Приветствуем вас воин!");
         });
     }
 }

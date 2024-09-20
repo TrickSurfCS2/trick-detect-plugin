@@ -10,7 +10,7 @@ partial class TrickDetect
 {
   [ConsoleCommand("update_tricks", "Update tricks list")]
   [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
-  public async Task OnUpdateTrickAsync(CCSPlayerController client, CommandInfo _)
+  public void OnUpdateTrickAsync(CCSPlayerController client, CommandInfo _)
   {
     var pawn = client.PlayerPawn.Value;
     if (pawn == null)
@@ -18,23 +18,26 @@ partial class TrickDetect
 
     var player = _playerManager.GetPlayer(client);
 
-    if (!player.Permissions.Contains(Permission.UpdateTricks))
+    // TODO
+    // if (!player.Permissions.Contains(Permission.UpdateTricks))
+    // {
+    // player.Client.PrintToChat($" {ChatColors.Purple} You dont have permission for this command!");
+    // return;
+    // }
+
+    _mapManager.LoadAndSetAllMaps().Wait();
+    var maps = _mapManager.GetAllMaps();
+
+    foreach (var map in maps)
     {
-      player.Client.PrintToChat($" {ChatColors.Purple} You dont have permission for this command!");
-      return;
+      player.Client.PrintToConsole($"Load data for map {map.FullName}");
+      _triggerManager.LoadAndSetMapTriggers(map).Wait();
+      player.Client.PrintToConsole($"Loaded triggers {_triggerManager.GetTriggersByMap(map).Count()}");
+      _trickManager.LoadAndSetMapTricks(map).Wait();
+      player.Client.PrintToConsole($"Loaded tricks {_trickManager.GetTricksByMap(map).Count()}");
     }
 
-    await Task.Run(async () =>
-    {
-      var maps = _mapManager.GetAllMaps();
-      foreach (var map in maps)
-      {
-        var tricks = await _trickManager.LoadMapTricks(map);
-        _trickManager.SetTricksToMap(map, tricks);
-      }
-
-      Server.PrintToChatAll($" {ChatColors.Purple} All tricks have been updated");
-    });
+    Server.PrintToChatAll($" {ChatColors.Purple} All tricks have been updated");
   }
 
   [ConsoleCommand("map", "Select map")]
@@ -57,8 +60,10 @@ partial class TrickDetect
 
     player.ResetTrickProgress();
     player.SelectedMap = map;
+
+    // TODO
     player.Client.PlayerPawn.Value!.Teleport(
-        map.Origin.ToVector(),
+        null,
         null,
         null
     );

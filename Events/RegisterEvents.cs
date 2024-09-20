@@ -1,7 +1,7 @@
-using System.Drawing;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
+using Microsoft.Extensions.Logging;
 
 namespace TrickDetect;
 
@@ -17,19 +17,13 @@ public partial class TrickDetect
     // Events
     RegisterEventHandler<EventPlayerConnectFull>(OnEventPlayerConnectFull);
     RegisterEventHandler<EventRoundStart>(OnEventRoundStart);
+    RegisterEventHandler<EventPlayerJump>(OnEventPlayerJump);
     RegisterEventHandler<EventPlayerSpawn>(OnEventPlayerSpawn);
     RegisterEventHandler<EventPlayerDeath>(OnEventPlayerDeath);
 
     // Entity hooks
     HookEntityOutput("trigger_multiple", "OnStartTouch", HookOnStartTouch);
     HookEntityOutput("trigger_multiple", "OnEndTouch", HookOnEndTouch);
-  }
-  private void UnRegisterEvents()
-  {
-    DeregisterEventHandler<EventPlayerConnectFull>(OnEventPlayerConnectFull);
-    DeregisterEventHandler<EventRoundStart>(OnEventRoundStart);
-    DeregisterEventHandler<EventPlayerSpawn>(OnEventPlayerSpawn);
-    DeregisterEventHandler<EventPlayerJump>(OnEventPlayerJump);
   }
 
   private void OnMapStart(string mapName)
@@ -93,13 +87,15 @@ public partial class TrickDetect
   {
     CCSPlayerController client = @event.Userid!;
 
-    if (client == null || !client.IsValid || client.IsBot || !client.UserId.HasValue)
+    if (!Helpers.ClientIsValid(client))
       return HookResult.Continue;
 
-    client.PlayerPawn.Value!.Render = Color.FromArgb(254, client.PlayerPawn.Value.Render.R, client.PlayerPawn.Value.Render.G, client.PlayerPawn.Value.Render.B);
-
     var player = _playerManager.GetPlayer(client);
-    player.ResetTrickProgress();
+    if (player != null)
+    {
+      player.ResetTrickProgress();
+      player.Client.HideLegs();
+    }
 
     return HookResult.Continue;
   }
@@ -107,28 +103,37 @@ public partial class TrickDetect
   {
     CCSPlayerController client = @event.Userid!;
 
-    if (client == null || !client.IsValid || client.IsBot || !client.UserId.HasValue)
+    if (!Helpers.ClientIsValid(client))
       return HookResult.Continue;
 
     var player = _playerManager.GetPlayer(client);
-    player.ResetTrickProgress();
+    if (player != null)
+    {
+      player.ResetTrickProgress();
+    }
 
     return HookResult.Continue;
   }
   private HookResult OnEventPlayerJump(EventPlayerJump @event, GameEventInfo info)
   {
-    CCSPlayerController? client = @event.Userid;
+    CCSPlayerController? client = @event.Userid!;
 
-    if (client == null || !client.IsValid || client.IsBot || !client.UserId.HasValue)
+    if (!Helpers.ClientIsValidAndAlive(client))
       return HookResult.Continue;
 
     var player = _playerManager.GetPlayer(client);
+
+    if (player == null)
+      return HookResult.Continue;
 
     if (player.Jumps.Count > 2)
     {
       player.Client.PrintToChat(" \x07 Jump during trick...");
       player.ResetTrickProgress();
     }
+
+    if (player.Debug)
+      player.Client.PrintToConsole($"OnEventPlayerJump");
 
     return HookResult.Continue;
   }
@@ -137,18 +142,15 @@ public partial class TrickDetect
   private HookResult HookOnStartTouch(CEntityIOOutput output, string name, CEntityInstance activator, CEntityInstance caller, CVariant value, float delay)
   {
     if (activator == null || caller == null || activator.DesignerName != "player")
-    {
       return HookResult.Continue;
-    }
 
     var pawn = new CCSPlayerPawn(activator.Handle).Controller.Value!.Handle;
     var client = new CCSPlayerController(pawn);
-
     var entName = caller.Entity?.Name;
+    var player = _playerManager.GetPlayer(client);
 
-    if (entName != null && Helpers.ClientIsValidAndAlive(client))
+    if (entName != null && Helpers.ClientIsValidAndAlive(client) && player != null)
     {
-      var player = _playerManager.GetPlayer(client);
       var triggerName = entName.ToString();
       var eventMsg = new EventOnStartTouchEvent
       {
@@ -165,18 +167,15 @@ public partial class TrickDetect
   private HookResult HookOnEndTouch(CEntityIOOutput output, string name, CEntityInstance activator, CEntityInstance caller, CVariant value, float delay)
   {
     if (activator == null || caller == null || activator.DesignerName != "player")
-    {
       return HookResult.Continue;
-    }
 
     var pawn = new CCSPlayerPawn(activator.Handle).Controller.Value!.Handle;
     var client = new CCSPlayerController(pawn);
-
     var entName = caller.Entity?.Name;
+    var player = _playerManager.GetPlayer(client);
 
-    if (entName != null && Helpers.ClientIsValidAndAlive(client))
+    if (entName != null && Helpers.ClientIsValidAndAlive(client) && player != null)
     {
-      var player = _playerManager.GetPlayer(client);
       var triggerName = entName.ToString();
       var eventMsg = new EventOnEndTouchEvent
       {

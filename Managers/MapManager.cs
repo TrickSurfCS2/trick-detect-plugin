@@ -4,7 +4,7 @@ namespace TrickDetect.Managers;
 
 public class MapManager(DB database)
 {
-  private readonly Map[] _maps = [];
+  private Map[] _maps = [];
 
   public Map[] GetAllMaps()
   {
@@ -21,7 +21,7 @@ public class MapManager(DB database)
   }
 
   // Api
-  public async Task<Map[]> LoadAllMaps()
+  public async Task LoadAndSetAllMaps()
   {
     var maps = await database.QueryAsync<Map>(@"
       SELECT 
@@ -31,9 +31,9 @@ public class MapManager(DB database)
         preview AS ""PreviewImage"",
         ""createdAt"" AS ""CreatedAt"",
         ""updatedAt"" AS ""UpdatedAt""
-      FROM public.map"
-    );
+      FROM public.""map""
+    ");
 
-    return maps.ToArray();
+    _maps = maps.ToArray();
   }
 }

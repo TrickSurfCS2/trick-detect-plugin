@@ -1,3 +1,4 @@
+using CounterStrikeSharp.API.Modules.Utils;
 using TrickDetect.Managers;
 
 namespace TrickDetect.Modules;
@@ -8,11 +9,14 @@ public class TriggerTouchModule(TriggerManager triggerManager, TrickManager tric
     {
         var player = e.Player;
         var triggerName = e.TriggerName;
-        var mapTriggers = triggerManager.GetMapTriggers(player.SelectedMap);
+        var mapTriggers = triggerManager.GetTriggersByMap(player.SelectedMap);
         var trigger = mapTriggers.FirstOrDefault((trigger) => trigger.FullName == triggerName);
 
         if (trigger == null)
             return;
+
+        if (player.Debug)
+            player.Client.PrintToChat($" {ChatColors.Grey} StartTouch - {ChatColors.Purple} {triggerName}");
 
         trickManager.RouteChecker(player);
     }
@@ -21,11 +25,14 @@ public class TriggerTouchModule(TriggerManager triggerManager, TrickManager tric
     {
         var player = e.Player;
         var triggerName = e.TriggerName;
-        var mapTriggers = triggerManager.GetMapTriggers(player.SelectedMap);
+        var mapTriggers = triggerManager.GetTriggersByMap(player.SelectedMap);
         var trigger = mapTriggers.FirstOrDefault((trigger) => trigger.FullName == triggerName);
 
         if (trigger == null)
             return;
+
+        if (player.Debug)
+            player.Client.PrintToChat($" {ChatColors.Grey} EndTouch - {ChatColors.Purple} {triggerName}");
 
         if (player.RouteTriggers.Count <= 1)
         {

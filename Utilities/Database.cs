@@ -2,7 +2,6 @@ using Dapper;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using System.Data;
-using System.Threading.Tasks;
 
 namespace TrickDetect.Database;
 
@@ -14,6 +13,11 @@ public class DB(string? dbConnectionString)
 	{
 		try
 		{
+			if (string.IsNullOrEmpty(dbConnectionString))
+			{
+				throw new ArgumentException("Database connection string cannot be null or empty.", nameof(dbConnectionString));
+			}
+
 			var connection = new NpgsqlConnection(dbConnectionString);
 			connection.Open();
 			return connection;
@@ -64,18 +68,6 @@ public class DB(string? dbConnectionString)
 	{
 		using var connection = await GetConnectionAsync();
 		return await connection.ExecuteAsync(query, parameters);
-	}
-
-	public T? QuerySingle<T>(string query, object? parameters = null)
-	{
-		using var connection = GetConnection();
-		return connection.QuerySingleOrDefault<T>(query, parameters);
-	}
-
-	public async Task<T?> QuerySingleAsync<T>(string query, object? parameters = null)
-	{
-		using var connection = await GetConnectionAsync();
-		return await connection.QuerySingleOrDefaultAsync<T>(query, parameters);
 	}
 
 	public IEnumerable<T> Query<T>(string query, object? parameters = null)

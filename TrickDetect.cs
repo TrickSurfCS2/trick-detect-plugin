@@ -26,23 +26,33 @@ public partial class TrickDetect : BasePlugin, IPluginConfig<TrickDetectConfig>
   {
     _logger = Logger;
 
-    _playerManager = new PlayerManager(_database);
+    _mapManager = new MapManager(_database);
     _triggerManager = new TriggerManager(_database);
     _trickManager = new TrickManager(_database);
-    _mapManager = new MapManager(_database);
+    _playerManager = new PlayerManager(_database);
     _eventsManager = new EventManager();
+
+    _mapManager.LoadAndSetAllMaps().Wait();
+    var maps = _mapManager.GetAllMaps();
+
+    foreach (var map in maps)
+    {
+      Logger.LogInformation($"Load data for map {map.FullName}");
+      _triggerManager.LoadAndSetMapTriggers(map).Wait();
+      Logger.LogInformation($"Loaded triggers {_triggerManager.GetTriggersByMap(map).Count()}");
+      _trickManager.LoadAndSetMapTricks(map).Wait();
+      Logger.LogInformation($"Loaded tricks {_trickManager.GetTricksByMap(map).Count()}");
+    }
 
     SubscribeEvents();
     RegisterEvents();
 
-    AddTimer(45f, () => _eventsManager.Publish(new EventSendAd()), TimerFlags.REPEAT);
+    AddTimer(300f, () => _eventsManager.Publish(new EventSendAd()), TimerFlags.REPEAT);
   }
 
   public override void Unload(bool hotReload)
   {
     if (hotReload)
       return;
-
-    UnRegisterEvents();
   }
 }

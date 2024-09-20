@@ -1,5 +1,4 @@
 using CounterStrikeSharp.API.Core;
-using Npgsql;
 using TrickDetect.Database;
 
 namespace TrickDetect.Managers;
@@ -15,17 +14,14 @@ public class PlayerManager(DB database)
 
   public void RemovePlayer(CCSPlayerController client)
   {
-    var playerToRemove = _players.FirstOrDefault(p => p.Client.Index == client.Index);
+    var playerToRemove = _players.FirstOrDefault(p => p.Info.Slot == client.Slot);
     if (playerToRemove != null)
-    {
-
       _players.Remove(playerToRemove);
-    }
   }
 
   public Player GetPlayer(CCSPlayerController client)
   {
-    return _players.FirstOrDefault(p => p.Client.Index == client.Index)!;
+    return _players.FirstOrDefault(p => p.Info.Slot == client.Slot)!;
   }
 
   public List<Player> GetPlayerList()
@@ -43,11 +39,7 @@ public class PlayerManager(DB database)
         DO UPDATE SET username = EXCLUDED.username
         RETURNING id;
     ";
-    var parameters = new NpgsqlParameter[]
-    {
-      new("@steamid", steamId),
-      new("@username", name)
-    };
+    var parameters = new { steamid = steamId, username = name };
 
     int userId = await database.ExecuteAsync(query, parameters);
 

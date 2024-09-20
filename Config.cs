@@ -60,8 +60,4 @@ public class TrickDetectConfig : BasePluginConfig
 
   [JsonPropertyName("DatabaseName")]
   public string DatabaseName { get; set; } = "";
-
-  // Surf settings
-  [JsonPropertyName("PreSpeed")]
-  public int PreSpeed { get; set; } = 405;
 }
