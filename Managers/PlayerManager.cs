@@ -30,7 +30,7 @@ public class PlayerManager(DB database)
   }
 
   // Api
-  public async Task<int> GetOrInsertPlayerAsync(string steamId, string name)
+  public async Task<int> SelectOrInsertPlayerAsync(string steamId, string name)
   {
     string query = @"
         INSERT INTO public.""user"" (steamid, username) 
@@ -46,7 +46,7 @@ public class PlayerManager(DB database)
     return userId;
   }
 
-  public async Task<int> GetAllPlayerPointsAsync(int userId)
+  public async Task<int> SelectAllPlayerPointsAsync(int userId)
   {
     var points = await database.QueryAsync<int>(@"
       SELECT SUM(t.""point"") AS points

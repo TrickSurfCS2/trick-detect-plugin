@@ -17,8 +17,8 @@ public class ConnectionModule(PlayerManager playerManager, MapManager mapManager
                 var player = new Player(e.Slot, e.SteamId, e.Name, map);
                 playerManager.AddPlayer(player);
 
-                int userId = await playerManager.GetOrInsertPlayerAsync(e.SteamId, e.Name);
-                int points = await playerManager.GetAllPlayerPointsAsync(userId);
+                int userId = await playerManager.SelectOrInsertPlayerAsync(e.SteamId, e.Name);
+                int points = await playerManager.SelectAllPlayerPointsAsync(userId);
 
                 Server.NextFrame(() =>
                 {
