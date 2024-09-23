@@ -37,7 +37,7 @@ The config is created automatically in (`/csgo/addons/counterstrikesharp/configs
 | > **noclip**                                        |
 | `noclipme`          | `Toggle noclip mode` |
 
-# Plugin modularity.
+# Plugin modularity
 
 You can find implementation pieces of some functionality in separate repositories
 
