@@ -10,6 +10,16 @@ public class Trigger
   public required DateTime UpdatedAt { get; set; }
 }
 
+public class RouteTrigger
+{
+  public required Trigger TouchedTrigger { get; set; }
+  public required double SpeedEndTouch { get; set; }
+  public required float? TimeStartTouch { get; set; }
+  public required float? TimeEndTouch { get; set; }
+  public required double? AvgSpeedStartTouch { get; set; } // Average speed from previous to current trigger
+  public required double? AvgSpeedEndTouch { get; set; } // Average speed inside current trigger
+}
+
 public class TriggersTrick
 {
   public required int TrickId { get; set; }

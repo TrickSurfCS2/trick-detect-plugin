@@ -46,8 +46,6 @@ public partial class TrickDetect : BasePlugin, IPluginConfig<TrickDetectConfig>
 
     SubscribeEvents();
     RegisterEvents();
-
-    AddTimer(300f, () => _eventsManager.Publish(new EventSendAd()), TimerFlags.REPEAT);
   }
 
   public override void Unload(bool hotReload)

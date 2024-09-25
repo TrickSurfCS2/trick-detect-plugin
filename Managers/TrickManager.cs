@@ -1,5 +1,6 @@
 
 using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Modules.Utils;
 using TrickDetect.Database;
 
 namespace TrickDetect.Managers;
@@ -18,8 +19,7 @@ public class TrickManager(DB database)
     if (player.Debug)
     {
       player.Client.PrintToConsole(" ");
-      player.Client.PrintToConsole($"TRIGGERS NOW >> {player.RouteTriggerPath}");
-      player.Client.PrintToConsole(" ");
+      player.Client.PrintToConsole($">>> {player.RouteTriggerPath}");
     }
 
     int containTricks = 0;
@@ -28,10 +28,11 @@ public class TrickManager(DB database)
     foreach (var trick in tricks)
     {
       var trickRoute = trick.GetRouteTriggerPath();
+
       if (trickRoute.Contains(player.RouteTriggerPath) && player.StartType == trick.StartType)
       {
         if (player.Debug)
-          player.Client.PrintToConsole($"CONTAIN >> {trick.Name} | {trickRoute}");
+          player.Client.PrintToConsole($"CONTAIN >>> {trick.Name} | {trickRoute}");
 
         containTricks++;
 
@@ -42,8 +43,7 @@ public class TrickManager(DB database)
 
     if (player.Debug)
     {
-      player.Client.PrintToConsole(" ");
-      player.Client.PrintToConsole($"TOTAL CONTAIN >> {containTricks}");
+      player.Client.PrintToConsole($"TOTAL >>> {containTricks}");
       player.Client.PrintToConsole(" ");
     }
 
@@ -63,10 +63,49 @@ public class TrickManager(DB database)
 
   public void CompleteTrick(Player player, Trick trick)
   {
+    double totalAvgSpeed = 0.0;
+    double totalTime = 0.0;
+
+    // Суммируем все AvgSpeedStartTouch и AvgSpeedEndTouch
+    foreach (var trigger in player.RouteTriggers)
+    {
+      if (trigger.AvgSpeedStartTouch.HasValue)
+        totalAvgSpeed += trigger.AvgSpeedStartTouch.Value;
+      if (trigger.AvgSpeedEndTouch.HasValue)
+        totalAvgSpeed += trigger.AvgSpeedEndTouch.Value;
+    }
+
+    // Вычисляем общее количество значений скорости
+    int speedCount = player.RouteTriggers.Count * 2; // Каждый триггер имеет два значения скорости
+
+    // Вычисляем среднюю скорость
+    totalAvgSpeed /= speedCount;
+
+    // Вычисляем время от первого касания до последнего
+    var firstTrigger = player.RouteTriggers.First();
+    var lastTrigger = player.RouteTriggers.Last();
+
+    if (firstTrigger.TimeEndTouch.HasValue && lastTrigger.TimeStartTouch.HasValue)
+      totalTime = lastTrigger.TimeStartTouch.Value - firstTrigger.TimeEndTouch.Value;
+
+
     player.Client.PlayerPawn.Value!.HealthShotBoostExpirationTime = Server.CurrentTime + 1;
     Utilities.SetStateChanged(player.Client.PlayerPawn.Value, "CCSPlayerPawn", "m_flHealthShotBoostExpirationTime");
     player.Client.ExecuteClientCommand($"play sounds\\weapons\\flashbang\\flashbang_explode1_distant.vsnd_c");
-    player.Client.PrintToChat($"Complete trick {trick.Name}");
+    player.Client.PrintToChat($"Complete trick {trick.Name} | {totalAvgSpeed} _ {totalTime}");
+
+    var WorldRecordTime = "0.0";
+    var WorldRecordSpeed = "0.0";
+    var WorldRecordTimeHolder = "Unnamed";
+    var WorldRecordSpeedHolder = "Unnamed";
+
+    string trickMessage = $"{ChatColors.Green}Trick {ChatColors.Grey}| {ChatColors.LightBlue}by {player.Info.Name} {ChatColors.Yellow}| Trick {trick.Name} {ChatColors.Green}| Points {ChatColors.Green}{trick.Point}";
+    string timeMessage = $"{ChatColors.Green}Time {ChatColors.Grey}| {ChatColors.Yellow}{Math.Round(totalTime, 2)} {ChatColors.Grey}WR {ChatColors.DarkBlue}{WorldRecordTime} {ChatColors.Blue}by {WorldRecordTimeHolder}";
+    string speedMessage = $"{ChatColors.Green}Спид {ChatColors.Grey}| {ChatColors.Yellow}{Math.Round(totalAvgSpeed)} {ChatColors.Grey}WR {ChatColors.DarkBlue}{WorldRecordSpeed} {ChatColors.Blue}by {WorldRecordSpeedHolder}";
+
+    player.Client.PrintToChat(trickMessage);
+    player.Client.PrintToChat(timeMessage);
+    player.Client.PrintToChat(speedMessage);
   }
 
   // Api

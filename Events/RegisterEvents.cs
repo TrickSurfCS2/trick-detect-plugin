@@ -1,7 +1,8 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Memory;
+using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using CounterStrikeSharp.API.Modules.Timers;
-using Microsoft.Extensions.Logging;
 
 namespace TrickDetect;
 
@@ -12,7 +13,7 @@ public partial class TrickDetect
     // Listeners
     RegisterListener<Listeners.OnMapStart>(OnMapStart);
     RegisterListener<Listeners.OnGameServerSteamAPIActivated>(OnGameServerSteamAPIActivated);
-    RegisterListener<Listeners.OnTick>(() => { _eventsManager.Publish(new EventOnTickEvent()); });
+    RegisterListener<Listeners.OnTick>(() => _eventsManager.Publish(new EventOnTickEvent()));
 
     // Events
     RegisterEventHandler<EventPlayerConnectFull>(OnEventPlayerConnectFull);
@@ -24,6 +25,12 @@ public partial class TrickDetect
     // Entity hooks
     HookEntityOutput("trigger_multiple", "OnStartTouch", HookOnStartTouch);
     HookEntityOutput("trigger_multiple", "OnEndTouch", HookOnEndTouch);
+
+    // VirtualFunctions
+    VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(PreOnTakeDamage, HookMode.Pre);
+
+    // Repeated timers
+    AddTimer(300f, () => _eventsManager.Publish(new EventSendAd()), TimerFlags.REPEAT);
   }
 
   private void OnMapStart(string mapName)
@@ -61,7 +68,7 @@ public partial class TrickDetect
      {
        Server.NextFrame(() =>
        {
-         Server.ExecuteCommand("sv_cheats                1");
+         Server.ExecuteCommand("mp_drop_knife_enable     1");
          Server.ExecuteCommand("mp_buytime               0");
          Server.ExecuteCommand("mp_roundtime             9999");
          Server.ExecuteCommand("sv_friction              4");
@@ -71,7 +78,7 @@ public partial class TrickDetect
          Server.ExecuteCommand("sv_maxspeed              400");
          Server.ExecuteCommand("sv_wateraccelerate       2000");
          Server.ExecuteCommand("sv_stopspeed             100");
-         Server.ExecuteCommand("sv_falldamage_scale      0");
+         Server.ExecuteCommand("sv_falldamage_scale      1");
          Server.ExecuteCommand("sv_enablebunnyhopping    true");
          Server.ExecuteCommand("sv_autobunnyhopping      true");
          Server.ExecuteCommand("sv_staminajumpcost       0");
@@ -118,22 +125,17 @@ public partial class TrickDetect
   {
     CCSPlayerController? client = @event.Userid!;
 
-    if (!Helpers.ClientIsValidAndAlive(client))
-      return HookResult.Continue;
-
     var player = _playerManager.GetPlayer(client);
 
-    if (player == null)
-      return HookResult.Continue;
-
-    if (player.Jumps.Count > 2)
+    if (Helpers.ClientIsValidAndAlive(client) && player != null)
     {
-      player.Client.PrintToChat(" \x07 Jump during trick...");
-      player.ResetTrickProgress();
-    }
+      var eventMsg = new EventOnJump
+      {
+        Player = player
+      };
 
-    if (player.Debug)
-      player.Client.PrintToConsole($"OnEventPlayerJump");
+      _eventsManager.Publish(eventMsg);
+    }
 
     return HookResult.Continue;
   }
@@ -185,6 +187,19 @@ public partial class TrickDetect
 
       _eventsManager.Publish(eventMsg);
     }
+
+    return HookResult.Continue;
+  }
+
+  private HookResult PreOnTakeDamage(DynamicHook hook)
+  {
+    // Remove all damage
+    var victim = hook.GetParam<CEntityInstance>(0);
+    var damageInfo = hook.GetParam<CTakeDamageInfo>(1);
+
+    damageInfo.Damage = 0;
+    damageInfo.TotalledDamage = 0;
+    damageInfo.ShouldBleed = false;
 
     return HookResult.Continue;
   }

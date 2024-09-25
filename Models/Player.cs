@@ -1,3 +1,4 @@
+using System.Numerics;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -24,6 +25,12 @@ public class Player
     public required string Name { get; init; }
   }
 
+  public class AverageSpeed
+  {
+    public required double Ticks { get; set; }
+    public required double TotalSpeed { get; set; }
+  }
+
   public Player(int Slot, string SteamId, string Name, Map Map)
   {
     Info = new PlayerInfo
@@ -31,6 +38,11 @@ public class Player
       Slot = Slot,
       SteamId = SteamId,
       Name = Name
+    };
+    AvgSpeedTicked = new AverageSpeed
+    {
+      Ticks = 0,
+      TotalSpeed = 0.0f
     };
     SelectedMap = Map;
   }
@@ -46,15 +58,22 @@ public class Player
   public bool Debug { get; set; } = false;
 
   // === Trick data === //
-  public List<Trigger> Jumps { get; set; } = new();
-  public List<Trigger> RouteTriggers { get; set; } = new();
+  public List<RouteTrigger> RouteTriggers { get; set; } = new();
   public double StartSpeed { get; set; } = 0.0;
   public StartType StartType { get; set; } = StartType.Velocity;
+  public bool IsJumped { get; set; } = false;
+  public AverageSpeed AvgSpeedTicked { get; set; }
+  public string RouteTriggerPath => string.Join(",", RouteTriggers.Select(t => t.TouchedTrigger.Name));
+  public double AvgSpeed()
+  {
+    var speed = AvgSpeedTicked.TotalSpeed / AvgSpeedTicked.Ticks;
+    ResetAverageSpeed();
+
+    return speed;
+  }
   // ================== //
 
   public CCSPlayerController Client => Utilities.GetPlayerFromSlot(Info.Slot)!;
-  public string RouteTriggerPath => string.Join(",", RouteTriggers.Select(t => t.FullName));
-  public bool IsJumped => Jumps.Count > 0;
 
   public void AddSavedLocation(Location location)
   {
@@ -85,10 +104,33 @@ public class Player
     });
   }
 
+  public void ResetAverageSpeed()
+  {
+    if (AvgSpeedTicked.Ticks == 0)
+      return;
+
+    AvgSpeedTicked = new AverageSpeed
+    {
+      Ticks = 0,
+      TotalSpeed = 0.0f
+    };
+  }
+
+  public void SetupStartSpeed()
+  {
+    var speed = Client.GetSpeed();
+    StartSpeed = speed;
+    StartType = speed < 400
+        ? StartType.PreStrafe
+        : StartType.Velocity;
+  }
+
   public void ResetTrickProgress()
   {
-    Jumps = new();
+    IsJumped = false;
     RouteTriggers = new();
     StartSpeed = 0.0;
+    StartType = StartType.Velocity;
+    ResetAverageSpeed();
   }
 }

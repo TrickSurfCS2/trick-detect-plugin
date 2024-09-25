@@ -5,22 +5,25 @@ namespace TrickDetect;
 
 public class HudModule(PlayerManager playerManager)
 {
-    private readonly PlayerManager _playerManager = playerManager;
+
 
     const string PRIMARY_COLOR = "#00DFA2";
+    const string SECONDARY_COLOR = "#F6FA70";
+    const string TERTIARY_COLOR = "#FF0060";
+    const string WHITE = "#FFFFFF";
 
     private class HudData
     {
-        public double Speed { get; set; }
+        public required double Speed { get; set; }
+        public required double StartSpeed { get; set; }
     }
 
-    private HudData BuildHudData(CCSPlayerController client)
+    private HudData BuildHudData(Player player)
     {
-        var speed = Math.Round(client.PlayerPawn.Value!.AbsVelocity.Length2D());
-
         var hudData = new HudData
         {
-            Speed = speed,
+            Speed = Math.Round(player.Client.PlayerPawn.Value!.AbsVelocity.Length2D()),
+            StartSpeed = player.StartSpeed,
         };
 
         return hudData;
@@ -30,8 +33,9 @@ public class HudModule(PlayerManager playerManager)
     private string RenderHud(HudData hudData)
     {
         var speedLine = $" <font class='fontSize-xl' color='{PRIMARY_COLOR}'>{hudData.Speed}</font> <br>";
+        var startSpeedLine = $" <font class='fontSize-m' color='{SECONDARY_COLOR}'>{hudData.StartSpeed}</font> <br>";
 
-        return speedLine;
+        return speedLine + startSpeedLine;
     }
 
     private void TimerPrintHtml(Player player, string hudContent)
@@ -52,13 +56,13 @@ public class HudModule(PlayerManager playerManager)
 
     public void OnTickEvent(EventOnTickEvent e)
     {
-        var entities = _playerManager.GetPlayerList();
+        var players = playerManager.GetPlayerList();
 
-        foreach (var entity in entities)
+        foreach (var player in players)
         {
-            var hudData = BuildHudData(entity.Client);
+            var hudData = BuildHudData(player);
             var hudContent = RenderHud(hudData);
-            TimerPrintHtml(entity, hudContent);
+            TimerPrintHtml(player, hudContent);
         }
     }
 

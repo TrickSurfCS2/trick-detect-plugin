@@ -58,6 +58,7 @@ partial class TrickDetect
 
     var player = _playerManager.GetPlayer(client);
 
+    player.ResetTrickProgress();
     player.TeleportToSavedLocation();
   }
 

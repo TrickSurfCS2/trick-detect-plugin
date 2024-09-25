@@ -4,5 +4,5 @@
   "DatabaseUser": "surfgxds",
   "DatabasePassword": "surfgxds",
   "DatabasePort": 5432,
-  "PreSpeed": 405
+  "PreSpeed": 400
 }

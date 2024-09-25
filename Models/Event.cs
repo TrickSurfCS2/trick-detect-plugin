@@ -19,6 +19,11 @@ public class EventOnEndTouchEvent
   public required Player Player { get; init; }
 }
 
+public class EventOnJump
+{
+  public required Player Player { get; init; }
+}
+
 
 public class EventOnPlayerConnect
 {

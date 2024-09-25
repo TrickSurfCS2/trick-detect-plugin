@@ -1,6 +1,5 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Modules.Utils;
-using Microsoft.Extensions.Logging;
 using TrickDetect.Managers;
 
 namespace TrickDetect.Modules;
@@ -13,7 +12,7 @@ public class ConnectionModule(PlayerManager playerManager, MapManager mapManager
         {
             try
             {
-                Map map = mapManager.GetAllMaps().First();
+                Map map = mapManager.GetAllMaps().Last();
                 var player = new Player(e.Slot, e.SteamId, e.Name, map);
                 playerManager.AddPlayer(player);
 

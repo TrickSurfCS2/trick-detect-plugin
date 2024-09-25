@@ -7,15 +7,17 @@ public partial class TrickDetect
   private static void SubscribeEvents()
   {
     var connectionHandler = new ConnectionModule(_playerManager, _mapManager);
-    var triggerTouchModule = new TriggerTouchModule(_triggerManager, _trickManager);
+    var trickRouteModule = new TrickRouteModule(_playerManager, _triggerManager, _trickManager);
     var hudHandler = new HudModule(_playerManager);
     var adHandler = new AdModule();
 
     _eventsManager.Subscribe<EventOnPlayerConnect>(connectionHandler.OnPlayerConnect);
     _eventsManager.Subscribe<EventOnPlayerDisconnect>(connectionHandler.OnPlayerDisconnect);
 
-    _eventsManager.Subscribe<EventOnStartTouchEvent>(triggerTouchModule.OnPlayerStartTouch);
-    _eventsManager.Subscribe<EventOnEndTouchEvent>(triggerTouchModule.OnPlayerEndTouch);
+    _eventsManager.Subscribe<EventOnStartTouchEvent>(trickRouteModule.OnPlayerStartTouch);
+    _eventsManager.Subscribe<EventOnEndTouchEvent>(trickRouteModule.OnPlayerEndTouch);
+    _eventsManager.Subscribe<EventOnJump>(trickRouteModule.OnPlayerJump);
+    _eventsManager.Subscribe<EventOnTickEvent>(trickRouteModule.OnTick);
 
     _eventsManager.Subscribe<EventOnTickEvent>(hudHandler.OnTickEvent);
 
