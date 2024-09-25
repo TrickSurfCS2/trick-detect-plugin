@@ -75,12 +75,6 @@ public class TrickManager(DB database)
         totalAvgSpeed += trigger.AvgSpeedEndTouch.Value;
     }
 
-    // Вычисляем общее количество значений скорости
-    int speedCount = player.RouteTriggers.Count * 2; // Каждый триггер имеет два значения скорости
-
-    // Вычисляем среднюю скорость
-    totalAvgSpeed /= speedCount;
-
     // Вычисляем время от первого касания до последнего
     var firstTrigger = player.RouteTriggers.First();
     var lastTrigger = player.RouteTriggers.Last();
