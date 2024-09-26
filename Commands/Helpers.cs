@@ -24,19 +24,6 @@ partial class TrickDetect
     player.Client.PrintToChat($" {ChatColors.Purple} Debug mode is {ChatColors.Grey} {(newValue ? "activated" : "deactivated")}");
   }
 
-  [ConsoleCommand("strip", "Remove all player weapons")]
-  [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
-  public void OnStrip(CCSPlayerController client, CommandInfo _)
-  {
-    var pawn = client.PlayerPawn.Value;
-    if (pawn == null)
-      return;
-
-    var player = _playerManager.GetPlayer(client);
-
-    player.Client.StripWeapons();
-  }
-
   [ConsoleCommand("noclipme", "NoclipMe")]
   [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
   public void OnNoclipCommand(CCSPlayerController client, CommandInfo _)
@@ -59,7 +46,7 @@ partial class TrickDetect
     }
   }
 
-  [ConsoleCommand("info", "Print current info")]
+  [ConsoleCommand("info", "Print current info player")]
   [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
   public void OnCurrentInfo(CCSPlayerController client, CommandInfo _)
   {

@@ -172,7 +172,6 @@ partial class TrickDetect
       return;
     }
 
-
     var beforeIndex = player.CurrentSavelocIndex;
     player.CurrentSavelocIndex = index;
     player.TeleportToSavedLocation();
