@@ -33,14 +33,19 @@ The config is created automatically in (`/csgo/addons/counterstrikesharp/configs
 | `clearloc`       | `Clear all saved locations`   |
 | `toloc`          | `Teleport to a specific saved location by index` |
 | > **helpers**                                        |
-| `noclipme`          | `Toggle noclip mode` |
-| `map`          | `Select map` |
-| `hud`          | `Toggle hud visibility` |
+| `noclipme`       | `Toggle noclip mode` |
+| `m`              | `Select map` |
+| `hud`            | `Toggle hud visibility` |
 | `debug`          | `Toggle debug mode` |
-| `info`          | `Print current info player` |
-| `fov`          | `Sets the player's FOV` |
+| `info`           | `Print current info player` |
+| `fov`            | `Sets the player's FOV` |
 | > **admin utils**                                        |
-| `update_tricks`          | `Update tricks list data` |
+| `update_tricks`  | `Update tricks list data` |
+
+
+## Example
+
+https://github.com/user-attachments/assets/93c2b789-7f1a-4428-a8d2-baa5d1941529
 
 
 ## TrickSurf ecosystem (Related section)
