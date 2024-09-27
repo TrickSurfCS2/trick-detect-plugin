@@ -115,14 +115,14 @@ public class Player
     var location = SavedLocations[CurrentSavelocIndex];
 
     Teleporting = true;
-    Client.PlayerPawn.Value!.Teleport(
-        location.origin.ToVector(),
-        location.angle.ToQAngle(),
-        location.velocity.ToVector()
-    );
 
     Server.NextFrame(() =>
     {
+      Client.PlayerPawn.Value!.Teleport(
+        location.origin.ToVector(),
+        location.angle.ToQAngle(),
+        location.velocity.ToVector()
+      );
       Teleporting = false;
     });
   }

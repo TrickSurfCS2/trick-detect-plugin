@@ -17,10 +17,7 @@ public class TrickManager(DB database)
   public void RouteChecker(Player player)
   {
     if (player.Debug)
-    {
-      player.Client.PrintToConsole(" ");
-      player.Client.PrintToConsole($">>> {player.RouteTriggerPath}");
-    }
+      player.Client.PrintToConsole($"> {player.RouteTriggerPath}");
 
     int containTricks = 0;
     Trick[] tricks = GetTricksByMap(player.SelectedMap);
@@ -32,7 +29,7 @@ public class TrickManager(DB database)
       if (trickRoute.Contains(player.RouteTriggerPath) && player.StartType == trick.StartType)
       {
         if (player.Debug)
-          player.Client.PrintToConsole($"CONTAIN >>> {trick.Name} | {trickRoute}");
+          player.Client.PrintToConsole($"CONTAIN > {trick.Name} | {trickRoute}");
 
         containTricks++;
 
@@ -42,10 +39,7 @@ public class TrickManager(DB database)
     }
 
     if (player.Debug)
-    {
-      player.Client.PrintToConsole($"TOTAL >>> {containTricks}");
-      player.Client.PrintToConsole(" ");
-    }
+      player.Client.PrintToConsole($"TOTAL > {containTricks}");
 
     if (string.IsNullOrEmpty(player.RouteTriggerPath))
     {
@@ -110,7 +104,8 @@ public class TrickManager(DB database)
 
     Server.NextFrame(() =>
     {
-      player.Client.PrintToConsole(wr.ToString()!);
+      if (player.Debug)
+        player.Client.PrintToConsole($"CompleteId {completeId}");
 
       if (isWR)
         player.Client.ExecuteClientCommand("play sounds\\ambient\\ambient\\rainscapes\\thunder_close01.vsnd_c");
@@ -213,14 +208,13 @@ public class TrickManager(DB database)
 
   public async Task<int> InsertComplete(Trick trick, Player player, int speed, double time)
   {
-    var completeId = await database.ExecuteAsync(@"
+    var completeId = await database.QueryAsyncSingle<int>(@"
       INSERT INTO ""complete""(""userId"", ""trickId"", speed, ""time"") 
       VALUES(@userId, @trickId, @speed, @time)
       RETURNING id;
     ",
       new { userId = player.Info!.Id, trickId = trick.Id, speed = speed, time = time }
     );
-
 
     return completeId;
   }

@@ -41,7 +41,7 @@ public class PlayerManager(DB database)
     ";
     var parameters = new { steamid = steamId, username = name };
 
-    int userId = await database.ExecuteAsync(query, parameters);
+    int userId = await database.QueryAsyncSingle<int>(query, parameters);
 
     return userId;
   }

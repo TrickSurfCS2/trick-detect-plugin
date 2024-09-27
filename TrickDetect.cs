@@ -11,7 +11,7 @@ namespace TrickDetect;
 public partial class TrickDetect : BasePlugin, IPluginConfig<TrickDetectConfig>
 {
   public override string ModuleName => "TrickDetect Plugin";
-  public override string ModuleVersion => "0.0.4";
+  public override string ModuleVersion => "1.0.0";
   public override string ModuleAuthor => "injurka";
 
   private static DB _database = new(null);

@@ -81,6 +81,12 @@ public class DB(string? dbConnectionString)
 		using var connection = await GetConnectionAsync();
 		return await connection.QueryAsync<T>(query, parameters);
 	}
+
+	public async Task<T> QueryAsyncSingle<T>(string query, object? parameters = null)
+	{
+		using var connection = await GetConnectionAsync();
+		return await connection.QuerySingleAsync<T>(query, parameters);
+	}
 }
 
 public class DoubleArrayToFloatArrayMapper : SqlMapper.TypeHandler<float[]>
