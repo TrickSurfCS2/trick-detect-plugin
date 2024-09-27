@@ -82,3 +82,25 @@ public class DB(string? dbConnectionString)
 		return await connection.QueryAsync<T>(query, parameters);
 	}
 }
+
+public class DoubleArrayToFloatArrayMapper : SqlMapper.TypeHandler<float[]>
+{
+	public override float[] Parse(object value)
+	{
+		if (value is double[] doubleArray)
+		{
+			return Array.ConvertAll(doubleArray, d => (float)d);
+		}
+		throw new InvalidCastException("Unable to cast object of type 'System.Double[]' to type 'System.Single[]'.");
+	}
+
+#nullable disable
+	public override void SetValue(IDbDataParameter parameter, float[] value)
+	{
+		if (value == null)
+			parameter.Value = DBNull.Value;
+		else
+			parameter.Value = Array.ConvertAll(value, f => (double)f);
+	}
+#nullable enable
+}

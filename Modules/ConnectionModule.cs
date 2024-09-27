@@ -8,19 +8,28 @@ public class ConnectionModule(PlayerManager playerManager, MapManager mapManager
 {
     public void OnPlayerConnect(EventOnPlayerConnect e)
     {
+        Map map = mapManager.GetAllMaps().Last();
+        var player = new Player(e.Slot, map);
+        playerManager.AddPlayer(player);
+
         _ = Task.Run(async () =>
         {
             try
             {
-                Map map = mapManager.GetAllMaps().Last();
-                var player = new Player(e.Slot, e.SteamId, e.Name, map);
-                playerManager.AddPlayer(player);
-
                 int userId = await playerManager.SelectOrInsertPlayerAsync(e.SteamId, e.Name);
+                player.Info = new Player.PlayerInfo
+                {
+                    Id = userId,
+                    Name = e.Name,
+                    SteamId = e.SteamId
+                };
+
+                // Not needed :D
                 int points = await playerManager.SelectAllPlayerPointsAsync(userId);
 
                 Server.NextFrame(() =>
                 {
+                    player.Client.PlayerPawn.Value!.Teleport(map.Origin.ToVector(), null, null);
                     Server.PrintToChatAll($" {ChatColors.Magenta}Игрок {e.Name} {ChatColors.White} подключается к серверу | {ChatColors.Gold}Очков: {points}");
                 });
 

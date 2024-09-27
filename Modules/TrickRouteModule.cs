@@ -115,4 +115,19 @@ public class TrickRouteModule(PlayerManager playerManager, TriggerManager trigge
 
         }
     }
+
+    public void OnPlayerSpawn(EventOnSpawn e)
+    {
+        var player = e.Player;
+
+        player.ResetTrickProgress();
+        player.Client.HideLegs();
+    }
+
+    public void OnPlayerDeath(EventOnDeath e)
+    {
+        var player = e.Player;
+
+        player.ResetTrickProgress();
+    }
 }

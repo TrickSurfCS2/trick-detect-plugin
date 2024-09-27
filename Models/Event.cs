@@ -1,28 +1,27 @@
 namespace TrickDetect;
 
-public class EventOnTickEvent
-{
-
-}
+public class EventOnTickEvent { }
 
 public class EventSendAd { }
 
-public class EventOnStartTouchEvent
+public class BaseEventOn
 {
-  public required string? TriggerName { get; init; }
   public required Player Player { get; init; }
 }
 
-public class EventOnEndTouchEvent
+public class EventOnStartTouchEvent : BaseEventOn
 {
   public required string? TriggerName { get; init; }
-  public required Player Player { get; init; }
 }
 
-public class EventOnJump
+public class EventOnEndTouchEvent : BaseEventOn
 {
-  public required Player Player { get; init; }
+  public required string? TriggerName { get; init; }
 }
+
+public class EventOnJump : BaseEventOn { }
+public class EventOnSpawn : BaseEventOn { }
+public class EventOnDeath : BaseEventOn { }
 
 
 public class EventOnPlayerConnect

@@ -100,8 +100,11 @@ public partial class TrickDetect
     var player = _playerManager.GetPlayer(client);
     if (player != null)
     {
-      player.ResetTrickProgress();
-      player.Client.HideLegs();
+      var eventMsg = new EventOnSpawn
+      {
+        Player = player
+      };
+      _eventsManager.Publish(eventMsg);
     }
 
     return HookResult.Continue;
@@ -116,7 +119,11 @@ public partial class TrickDetect
     var player = _playerManager.GetPlayer(client);
     if (player != null)
     {
-      player.ResetTrickProgress();
+      var eventMsg = new EventOnDeath
+      {
+        Player = player
+      };
+      _eventsManager.Publish(eventMsg);
     }
 
     return HookResult.Continue;
@@ -125,9 +132,11 @@ public partial class TrickDetect
   {
     CCSPlayerController? client = @event.Userid!;
 
-    var player = _playerManager.GetPlayer(client);
+    if (!Helpers.ClientIsValidAndAlive(client))
+      return HookResult.Continue;
 
-    if (Helpers.ClientIsValidAndAlive(client) && player != null)
+    var player = _playerManager.GetPlayer(client);
+    if (player != null)
     {
       var eventMsg = new EventOnJump
       {

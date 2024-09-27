@@ -16,34 +16,8 @@ partial class TrickDetect
     if (pawn == null)
       return;
 
-    var origin = new DimensionVector
-    {
-      X = pawn.AbsOrigin!.X,
-      Y = pawn.AbsOrigin!.Y,
-      Z = pawn.AbsOrigin!.Z
-    };
-    var angle = new DimensionVector
-    {
-      X = pawn.EyeAngles!.X,
-      Y = pawn.EyeAngles!.Y,
-      Z = pawn.EyeAngles!.Z
-    };
-    var velocity = new DimensionVector
-    {
-      X = pawn.AbsVelocity!.X,
-      Y = pawn.AbsVelocity!.Y,
-      Z = pawn.AbsVelocity!.Z
-    };
-
-    var location = new Location
-    {
-      origin = origin,
-      angle = angle,
-      velocity = velocity,
-    };
-
     var player = _playerManager.GetPlayer(client);
-    player.AddSavedLocation(location);
+    player.SaveCurrentLocation();
     player.Client.PrintToChat($" {ChatColors.Purple} Saved location {ChatColors.Grey}#{player.CurrentSavelocIndex}");
   }
 

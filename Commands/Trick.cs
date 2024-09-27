@@ -40,8 +40,8 @@ partial class TrickDetect
     Server.PrintToChatAll($" {ChatColors.Purple} All tricks have been updated");
   }
 
-  [ConsoleCommand("map", "Select map")]
-  [CommandHelper(minArgs: 1, usage: "<map> ski2", whoCanExecute: CommandUsage.CLIENT_ONLY)]
+  [ConsoleCommand("m", "Select map")]
+  [CommandHelper(minArgs: 1, usage: "<m> ski2", whoCanExecute: CommandUsage.CLIENT_ONLY)]
   public void OnSelectMap(CCSPlayerController client, CommandInfo command)
   {
     var pawn = client.PlayerPawn.Value;
@@ -59,13 +59,8 @@ partial class TrickDetect
     var player = _playerManager.GetPlayer(client);
 
     player.ResetTrickProgress();
+    player.SavedLocations.Clear();
     player.SelectedMap = map;
-
-    // TODO
-    player.Client.PlayerPawn.Value!.Teleport(
-        null,
-        null,
-        null
-    );
+    player.Client.PlayerPawn.Value!.Teleport(map.Origin.ToVector(), null, null);
   }
 }

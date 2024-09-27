@@ -18,6 +18,8 @@ public partial class TrickDetect
     _eventsManager.Subscribe<EventOnEndTouchEvent>(trickRouteModule.OnPlayerEndTouch);
     _eventsManager.Subscribe<EventOnJump>(trickRouteModule.OnPlayerJump);
     _eventsManager.Subscribe<EventOnTickEvent>(trickRouteModule.OnTick);
+    _eventsManager.Subscribe<EventOnSpawn>(trickRouteModule.OnPlayerSpawn);
+    _eventsManager.Subscribe<EventOnDeath>(trickRouteModule.OnPlayerDeath);
 
     _eventsManager.Subscribe<EventOnTickEvent>(hudHandler.OnTickEvent);
 

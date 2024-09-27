@@ -1,4 +1,3 @@
-using System.Numerics;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -20,9 +19,9 @@ public class Player
 {
   public class PlayerInfo
   {
-    public required int Slot { get; init; }
-    public required string SteamId { get; init; }
-    public required string Name { get; init; }
+    public required int Id { get; set; }
+    public required string SteamId { get; set; }
+    public required string Name { get; set; }
   }
 
   public class AverageSpeed
@@ -31,23 +30,19 @@ public class Player
     public required double TotalSpeed { get; set; }
   }
 
-  public Player(int Slot, string SteamId, string Name, Map Map)
+  public Player(int slot, Map map)
   {
-    Info = new PlayerInfo
-    {
-      Slot = Slot,
-      SteamId = SteamId,
-      Name = Name
-    };
+    Slot = slot;
+    SelectedMap = map;
     AvgSpeedTicked = new AverageSpeed
     {
       Ticks = 0,
       TotalSpeed = 0.0f
     };
-    SelectedMap = Map;
   }
 
-  public readonly PlayerInfo Info;
+  public int Slot { get; init; }
+  public PlayerInfo? Info;
   public Map SelectedMap { get; set; }
 
   public List<Location> SavedLocations { get; set; } = new();
@@ -73,10 +68,38 @@ public class Player
   }
   // ================== //
 
-  public CCSPlayerController Client => Utilities.GetPlayerFromSlot(Info.Slot)!;
+  public CCSPlayerController Client => Utilities.GetPlayerFromSlot(Slot)!;
 
-  public void AddSavedLocation(Location location)
+  public void SaveCurrentLocation()
   {
+    var pawn = Client.PlayerPawn.Value!;
+
+    var origin = new DimensionVector
+    {
+      X = pawn.AbsOrigin!.X,
+      Y = pawn.AbsOrigin!.Y,
+      Z = pawn.AbsOrigin!.Z
+    };
+    var angle = new DimensionVector
+    {
+      X = pawn.EyeAngles!.X,
+      Y = pawn.EyeAngles!.Y,
+      Z = pawn.EyeAngles!.Z
+    };
+    var velocity = new DimensionVector
+    {
+      X = pawn.AbsVelocity!.X,
+      Y = pawn.AbsVelocity!.Y,
+      Z = pawn.AbsVelocity!.Z
+    };
+
+    var location = new Location
+    {
+      origin = origin,
+      angle = angle,
+      velocity = velocity,
+    };
+
     SavedLocations.Add(location);
     CurrentSavelocIndex = SavedLocations.Count - 1;
   }

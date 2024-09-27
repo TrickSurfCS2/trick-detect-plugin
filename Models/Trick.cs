@@ -15,3 +15,11 @@ public class Trick
     return string.Join(",", Triggers.Select(t => t.Name));
   }
 }
+
+public class TrickWR
+{
+  public required float? TimeWR { get; set; }
+  public required int? SpeedWR { get; set; }
+  public required string? UsernameTimeWR { get; set; }
+  public required string? UsernameSpeedWR { get; set; }
+}

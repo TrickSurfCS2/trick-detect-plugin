@@ -14,14 +14,14 @@ public class PlayerManager(DB database)
 
   public void RemovePlayer(CCSPlayerController client)
   {
-    var playerToRemove = _players.FirstOrDefault(p => p.Info.Slot == client.Slot);
+    var playerToRemove = _players.FirstOrDefault(p => p.Slot == client.Slot);
     if (playerToRemove != null)
       _players.Remove(playerToRemove);
   }
 
   public Player GetPlayer(CCSPlayerController client)
   {
-    return _players.FirstOrDefault(p => p.Info.Slot == client.Slot)!;
+    return _players.FirstOrDefault(p => p.Slot == client.Slot)!;
   }
 
   public List<Player> GetPlayerList()
@@ -49,7 +49,7 @@ public class PlayerManager(DB database)
   public async Task<int> SelectAllPlayerPointsAsync(int userId)
   {
     var points = await database.QueryAsync<int>(@"
-      SELECT SUM(t.""point"") AS points
+      SELECT COALESCE(SUM(t.""point""), 0) AS points
       FROM (
           SELECT DISTINCT(c.""trickId"") as id
           FROM public.""complete"" c

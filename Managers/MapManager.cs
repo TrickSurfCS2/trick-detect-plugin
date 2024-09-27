@@ -1,3 +1,4 @@
+using Dapper;
 using TrickDetect.Database;
 
 namespace TrickDetect.Managers;
@@ -13,7 +14,10 @@ public class MapManager(DB database)
 
   public Map GetMapByName(string name)
   {
-    return _maps.FirstOrDefault(map => map.Name == name)!;
+    var mapName = _maps.FirstOrDefault(map => map.Name == name)!;
+    var mapFullName = _maps.FirstOrDefault(map => map.FullName == name)!;
+
+    return mapName ?? mapFullName;
   }
   public Map GetMapById(int id)
   {
@@ -23,6 +27,8 @@ public class MapManager(DB database)
   // Api
   public async Task LoadAndSetAllMaps()
   {
+    SqlMapper.AddTypeHandler(new DoubleArrayToFloatArrayMapper());
+
     var maps = await database.QueryAsync<Map>(@"
       SELECT 
         id AS ""Id"",
@@ -30,7 +36,8 @@ public class MapManager(DB database)
         ""fullName"" AS ""FullName"",
         preview AS ""PreviewImage"",
         ""createdAt"" AS ""CreatedAt"",
-        ""updatedAt"" AS ""UpdatedAt""
+        ""updatedAt"" AS ""UpdatedAt"",
+        origin AS ""Origin""
       FROM public.""map""
     ");
 
