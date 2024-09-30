@@ -16,7 +16,9 @@ The config is created automatically in (`/csgo/addons/counterstrikesharp/configs
   "DatabaseName": "surfgxds_dev",
   "DatabaseUser": "surfgxds",
   "DatabasePassword": "surfgxds",
-  "DatabasePort": "5432"
+  "DatabasePort": 5432,
+  "PreSpeed": 400,
+  "DefaultMap": "ski2"
 }
 ```
 
