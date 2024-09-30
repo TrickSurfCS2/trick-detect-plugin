@@ -12,7 +12,7 @@ public class Trick
 
   public string GetRouteTriggerPath()
   {
-    return string.Join(",", Triggers.Select(t => t.Name));
+    return string.Join(">", Triggers.Select(t => t.Name));
   }
 }
 

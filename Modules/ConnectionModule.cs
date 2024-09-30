@@ -8,7 +8,8 @@ public class ConnectionModule(PlayerManager playerManager, MapManager mapManager
 {
     public void OnPlayerConnect(EventOnPlayerConnect e)
     {
-        Map map = mapManager.GetAllMaps().Last();
+
+        Map map = mapManager.GetMapByName(TrickDetect._cfg!.DefaultMap);
         var player = new Player(e.Slot, map);
         playerManager.AddPlayer(player);
 

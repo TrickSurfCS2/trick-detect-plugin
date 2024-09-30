@@ -58,7 +58,7 @@ public class Player
   public StartType StartType { get; set; } = StartType.Velocity;
   public bool IsJumped { get; set; } = false;
   public AverageSpeed AvgSpeedTicked { get; set; }
-  public string RouteTriggerPath => string.Join(",", RouteTriggers.Select(t => t.TouchedTrigger.Name));
+  public string RouteTriggerPath => RouteTriggers.Any() ? string.Join(">", RouteTriggers.Select(t => t.TouchedTrigger.Name)) : string.Empty;
   public double AvgSpeed()
   {
     var speed = AvgSpeedTicked.TotalSpeed / AvgSpeedTicked.Ticks;
@@ -115,6 +115,7 @@ public class Player
     var location = SavedLocations[CurrentSavelocIndex];
 
     Teleporting = true;
+    ResetTrickProgress();
 
     Server.NextFrame(() =>
     {
@@ -124,6 +125,9 @@ public class Player
         location.velocity.ToVector()
       );
       Teleporting = false;
+
+      if (Debug)
+        Client.PrintToChat($"{ChatColors.Grey}Teleported");
     });
   }
 
@@ -142,6 +146,8 @@ public class Player
   public void SetupStartSpeed()
   {
     var speed = Client.GetSpeed();
+    var maxSpeed = TrickDetect._cfg!.PreSpeed;
+
     StartSpeed = speed;
     StartType = speed < 400
         ? StartType.PreStrafe

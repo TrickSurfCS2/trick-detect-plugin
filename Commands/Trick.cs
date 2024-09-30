@@ -18,6 +18,7 @@ partial class TrickDetect
 
     var player = _playerManager.GetPlayer(client);
 
+
     // TODO
     // if (!player.Permissions.Contains(Permission.UpdateTricks))
     // {
@@ -27,15 +28,7 @@ partial class TrickDetect
 
     _mapManager.LoadAndSetAllMaps().Wait();
     var maps = _mapManager.GetAllMaps();
-
-    foreach (var map in maps)
-    {
-      player.Client.PrintToConsole($"Load data for map {map.FullName}");
-      _triggerManager.LoadAndSetMapTriggers(map).Wait();
-      player.Client.PrintToConsole($"Loaded triggers {_triggerManager.GetTriggersByMap(map).Count()}");
-      _trickManager.LoadAndSetMapTricks(map).Wait();
-      player.Client.PrintToConsole($"Loaded tricks {_trickManager.GetTricksByMap(map).Count()}");
-    }
+    this.LoadMapData(maps);
 
     Server.PrintToChatAll($" {ChatColors.Purple} All tricks have been updated");
   }
@@ -62,5 +55,34 @@ partial class TrickDetect
     player.SavedLocations.Clear();
     player.SelectedMap = map;
     player.Client.PlayerPawn.Value!.Teleport(map.Origin.ToVector(), null, null);
+  }
+
+  [ConsoleCommand("tricks", "Show all tricks for map")]
+  [CommandHelper(minArgs: 1, usage: "<tricks> ski2", whoCanExecute: CommandUsage.CLIENT_ONLY)]
+  public void OnTricksMap(CCSPlayerController client, CommandInfo command)
+  {
+    var pawn = client.PlayerPawn.Value;
+    if (pawn == null || command.ArgCount < 2)
+      return;
+
+    var map = _mapManager.GetMapByName(command.GetArg(1));
+    var trickName = command.GetArg(2);
+
+    if (map == null)
+    {
+      client.PrintToChat($" {ChatColors.White}Cannot find map");
+      return;
+    }
+
+    var tricks = _trickManager.GetTricksByMap(map);
+
+    if (trickName != null)
+      tricks = tricks.Where(trick => trick.Name.Replace(" ", "_").ToLower().StartsWith(trickName)).ToArray();
+
+    foreach (var trick in tricks)
+    {
+      client.PrintToConsole($"- {trick.Name} {trick.Point} {trick.StartType}");
+      client.PrintToConsole($"> {trick.GetRouteTriggerPath()}");
+    }
   }
 }

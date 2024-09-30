@@ -32,6 +32,8 @@ partial class TrickDetect
     if (pawn == null)
       return;
 
+    var player = _playerManager.GetPlayer(client);
+
     if (pawn.MoveType == MoveType_t.MOVETYPE_NOCLIP)
     {
       pawn.MoveType = MoveType_t.MOVETYPE_WALK;
@@ -44,6 +46,8 @@ partial class TrickDetect
       Schema.SetSchemaValue(pawn.Handle, "CBaseEntity", "m_nActualMoveType", 8);
       Utilities.SetStateChanged(pawn, "CBaseEntity", "m_MoveType");
     }
+
+    player.ResetTrickProgress();
   }
 
   [ConsoleCommand("info", "Print current info player")]
@@ -55,12 +59,14 @@ partial class TrickDetect
       return;
 
     var player = _playerManager.GetPlayer(client);
+    Trick[] tricks = _trickManager.GetTricksByMap(player.SelectedMap);
 
     player.Client.PrintToConsole($"RouteTriggerPath >>> {player.RouteTriggerPath}");
     player.Client.PrintToConsole($"SelectedMap >>> {player.SelectedMap.Name}");
     player.Client.PrintToConsole($"StartType >>> {player.StartType}");
     player.Client.PrintToConsole($"StartSpeed >>> {player.StartSpeed}");
     player.Client.PrintToConsole($"IsJumped >>> {player.IsJumped}");
+    player.Client.PrintToConsole($"RoutesMatched >>> {_trickManager.CheckRouteTrickMatching(tricks, player, out Trick? _)}");
   }
 
 

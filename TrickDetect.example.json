@@ -4,5 +4,6 @@
   "DatabaseUser": "surfgxds",
   "DatabasePassword": "surfgxds",
   "DatabasePort": 5432,
-  "PreSpeed": 400
+  "PreSpeed": 400,
+  "DefaultMap": "ski2"
 }

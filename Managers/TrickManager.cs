@@ -16,30 +16,15 @@ public class TrickManager(DB database)
 
   public void RouteChecker(Player player)
   {
+    Trick[] tricks = GetTricksByMap(player.SelectedMap);
+
     if (player.Debug)
       player.Client.PrintToConsole($"> {player.RouteTriggerPath}");
 
-    int containTricks = 0;
-    Trick[] tricks = GetTricksByMap(player.SelectedMap);
-
-    foreach (var trick in tricks)
-    {
-      var trickRoute = trick.GetRouteTriggerPath();
-
-      if (trickRoute.Contains(player.RouteTriggerPath) && player.StartType == trick.StartType)
-      {
-        if (player.Debug)
-          player.Client.PrintToConsole($"CONTAIN > {trick.Name} | {trickRoute}");
-
-        containTricks++;
-
-        if (trickRoute == player.RouteTriggerPath)
-          CompleteTrick(player, trick);
-      }
-    }
+    int containTricks = CheckRouteTrickMatching(tricks, player, out Trick? matchingTrick);
 
     if (player.Debug)
-      player.Client.PrintToConsole($"TOTAL > {containTricks}");
+      player.Client.PrintToConsole($"TotalContain > {containTricks}");
 
     if (string.IsNullOrEmpty(player.RouteTriggerPath))
     {
@@ -50,14 +35,42 @@ public class TrickManager(DB database)
     if (containTricks == 0)
     {
       player.StartType = StartType.Velocity;
-      player.RouteTriggers.RemoveAt(player.RouteTriggers.Count - 1);
+      player.RouteTriggers.RemoveAt(0);
       RouteChecker(player);
     }
+    else if (matchingTrick != null)
+    {
+      CompleteTrick(player, matchingTrick);
+    }
+  }
+
+  public int CheckRouteTrickMatching(Trick[] tricks, Player player, out Trick? matchingTrick)
+  {
+    int containTricks = 0;
+    matchingTrick = null;
+
+    foreach (var trick in tricks)
+    {
+      var trickRoute = trick.GetRouteTriggerPath();
+
+      if ((trickRoute + ">").StartsWith(player.RouteTriggerPath + ">") && player.StartType == trick.StartType)
+      {
+        if (player.Debug)
+          player.Client.PrintToConsole($"Contain > {trick.Name} | {trickRoute} | {trick.Point} {trick.StartType}");
+
+        containTricks++;
+
+        if (trickRoute == player.RouteTriggerPath)
+          matchingTrick = trick;
+      }
+    }
+
+    return containTricks;
   }
 
   public async void CompleteTrick(Player player, Trick trick)
   {
-    var totalAvgSpeed = (int)Math.Round(player.RouteTriggers.Sum(trigger => (trigger.AvgSpeedStartTouch ?? 0) + (trigger.AvgSpeedEndTouch ?? 0)));
+    var totalAvgSpeed = (int)Math.Round(player.RouteTriggers.Sum(trigger => (trigger.AvgSpeedStartTouch ?? 0) + (trigger.AvgSpeedEndTouch ?? 0))) / player.RouteTriggers.Count;
     var firstTrigger = player.RouteTriggers.First();
     var lastTrigger = player.RouteTriggers.Last();
     var totalTime = (lastTrigger.TimeStartTouch ?? 0) - (firstTrigger.TimeEndTouch ?? 0);

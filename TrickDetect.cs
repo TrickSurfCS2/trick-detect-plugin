@@ -1,6 +1,5 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Modules.Timers;
 using Microsoft.Extensions.Logging;
 using TrickDetect.Database;
 using TrickDetect.Managers;
@@ -21,10 +20,12 @@ public partial class TrickDetect : BasePlugin, IPluginConfig<TrickDetectConfig>
   private static TrickManager _trickManager = new(_database!);
   private static EventManager _eventsManager = new();
   internal static ILogger? _logger;
+  internal static TrickDetectConfig? _cfg;
 
   public override void Load(bool hotReload)
   {
     _logger = Logger;
+    _cfg = Config;
 
     _mapManager = new MapManager(_database);
     _triggerManager = new TriggerManager(_database);
@@ -35,15 +36,7 @@ public partial class TrickDetect : BasePlugin, IPluginConfig<TrickDetectConfig>
     _mapManager.LoadAndSetAllMaps().Wait();
     var maps = _mapManager.GetAllMaps();
 
-    foreach (var map in maps)
-    {
-      Logger.LogInformation($"Load data for map {map.FullName}");
-      _triggerManager.LoadAndSetMapTriggers(map).Wait();
-      Logger.LogInformation($"Loaded triggers {_triggerManager.GetTriggersByMap(map).Count()}");
-      _trickManager.LoadAndSetMapTricks(map).Wait();
-      Logger.LogInformation($"Loaded tricks {_trickManager.GetTricksByMap(map).Count()}");
-    }
-
+    LoadMapData(maps);
     SubscribeEvents();
     RegisterEvents();
   }
@@ -52,5 +45,18 @@ public partial class TrickDetect : BasePlugin, IPluginConfig<TrickDetectConfig>
   {
     if (hotReload)
       return;
+  }
+
+  public void LoadMapData(Map[] maps)
+  {
+    Logger.LogInformation($"Load maps {maps.Count()}");
+    foreach (var map in maps)
+    {
+      Logger.LogInformation($"Load data for map {map.FullName}");
+      _triggerManager.LoadAndSetMapTriggers(map).Wait();
+      Logger.LogInformation($"Loaded triggers {_triggerManager.GetTriggersByMap(map).Count()}");
+      _trickManager.LoadAndSetMapTricks(map).Wait();
+      Logger.LogInformation($"Loaded tricks {_trickManager.GetTricksByMap(map).Count()}");
+    }
   }
 }

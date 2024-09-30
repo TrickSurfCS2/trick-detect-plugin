@@ -73,6 +73,7 @@ public partial class TrickDetect
          Server.ExecuteCommand("mp_roundtime             9999");
          Server.ExecuteCommand("sv_friction              4");
          Server.ExecuteCommand("sv_accelerate            10");
+         Server.ExecuteCommand("sv_air_max_wishspeed     40");
          Server.ExecuteCommand("sv_airaccelerate         9999");
          Server.ExecuteCommand("sv_maxvelocity           3500");
          Server.ExecuteCommand("sv_maxspeed              400");

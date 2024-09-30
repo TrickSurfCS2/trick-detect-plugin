@@ -1,4 +1,5 @@
 using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
 using TrickDetect.Managers;
 
@@ -14,18 +15,36 @@ public class TrickRouteModule(PlayerManager playerManager, TriggerManager trigge
         var trigger = mapTriggers.FirstOrDefault((trigger) => trigger.Name == triggerName);
 
         if (player.Debug)
-            player.Client.PrintToChat($" {ChatColors.Grey} StartTouch - {ChatColors.Purple} {triggerName} {trigger?.Id.ToString() ?? "❌"}");
+            player.Client.PrintToChat($"{ChatColors.Grey} StartTouch - {ChatColors.Purple} {triggerName} {trigger?.Id.ToString() ?? "❌"}");
 
-        if (trigger == null)
+        if (triggerName!.StartsWith("boost"))
+        {
+            int[] velocity = triggerName.Split("-")[1].Split("_")
+                            .Select(int.Parse)
+                            .ToArray();
+
+            Server.NextFrame(() =>
+            {
+                player.Client.PlayerPawn.Value!.Teleport(
+                    null,
+                    null,
+                    new Vector(velocity[0], velocity[1], velocity[2])
+                );
+                player.StartType = StartType.Velocity;
+            });
+        }
+
+        if (trigger == null || player.Client.Pawn.Value!.MoveType == MoveType_t.MOVETYPE_NOCLIP)
             return;
 
+        var speed = player.AvgSpeed();
         var routeTrigger = new RouteTrigger
         {
             TouchedTrigger = trigger,
             SpeedEndTouch = player.Client.GetSpeed(),
             TimeStartTouch = Server.CurrentTime,
             TimeEndTouch = null,
-            AvgSpeedStartTouch = player.AvgSpeed(),
+            AvgSpeedStartTouch = double.IsNaN(speed) ? null : speed,
             AvgSpeedEndTouch = null,
         };
         player.RouteTriggers.Add(routeTrigger);
@@ -41,9 +60,9 @@ public class TrickRouteModule(PlayerManager playerManager, TriggerManager trigge
         var trigger = mapTriggers.FirstOrDefault((trigger) => trigger.Name == triggerName);
 
         if (player.Debug)
-            player.Client.PrintToChat($" {ChatColors.Grey} EndTouch - {ChatColors.Purple} {triggerName} {trigger?.Id.ToString() ?? "❌"}");
+            player.Client.PrintToChat($"{ChatColors.Grey} StartTouch - {ChatColors.Purple} {triggerName} {trigger?.Id.ToString() ?? "❌"}");
 
-        if (trigger == null)
+        if (trigger == null || player.Client.Pawn.Value!.MoveType == MoveType_t.MOVETYPE_NOCLIP)
             return;
 
         if (player.RouteTriggers.Count == 0)
@@ -67,7 +86,12 @@ public class TrickRouteModule(PlayerManager playerManager, TriggerManager trigge
         else
         {
             var previousTrigger = player.RouteTriggers.Find(f => f.TouchedTrigger.Id == trigger.Id);
-            if (previousTrigger != null && previousTrigger.TimeEndTouch == null)
+
+            // Check if the previous start touch trigger was triggered before the current one
+            if (previousTrigger == null || previousTrigger.TouchedTrigger.Name != triggerName)
+                return;
+
+            if (previousTrigger.TimeEndTouch == null)
             {
                 previousTrigger.TimeEndTouch = Server.CurrentTime;
                 previousTrigger.SpeedEndTouch = player.Client.GetSpeed();

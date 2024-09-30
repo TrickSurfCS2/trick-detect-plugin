@@ -60,4 +60,10 @@ public class TrickDetectConfig : BasePluginConfig
 
   [JsonPropertyName("DatabaseName")]
   public string DatabaseName { get; set; } = "";
+
+  [JsonPropertyName("PreSpeed")]
+  public int PreSpeed { get; set; } = 400;
+
+  [JsonPropertyName("DefaultMap")]
+  public string DefaultMap { get; set; } = "ski2";
 }
