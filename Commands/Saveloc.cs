@@ -7,6 +7,17 @@ namespace TrickDetect;
 
 partial class TrickDetect
 {
+  public void TeleportDelay(Player player)
+  {
+    if (player.Teleporting)
+      return;
+
+    player.Teleporting = true;
+    player.TeleportToSavedLocation();
+    AddTimer(0.1f, () => player.Teleporting = false);
+  }
+
+
   [ConsoleCommand("saveloc", "Save current location")]
   [ConsoleCommand("sm_saveloc", "Save current location")]
   [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
@@ -32,7 +43,7 @@ partial class TrickDetect
 
     var player = _playerManager.GetPlayer(client);
 
-    player.TeleportToSavedLocation();
+    TeleportDelay(player);
   }
 
   [ConsoleCommand("prevloc", "Teleport to previous saved location and remove current")]
@@ -58,7 +69,8 @@ partial class TrickDetect
     if (player.CurrentSavelocIndex < 0)
       player.CurrentSavelocIndex = player.SavedLocations.Count - 1;
 
-    player.TeleportToSavedLocation();
+
+    TeleportDelay(player);
     player.Client.PrintToChat($" {ChatColors.Purple} Removed current location and switch to {ChatColors.Grey}#{player.CurrentSavelocIndex}");
   }
 
@@ -84,7 +96,7 @@ partial class TrickDetect
     if (player.CurrentSavelocIndex < 0)
       player.CurrentSavelocIndex = player.SavedLocations.Count - 1;
 
-    player.TeleportToSavedLocation();
+    TeleportDelay(player);
     player.Client.PrintToChat($" {ChatColors.Purple} Changed location to {ChatColors.Grey}#{player.CurrentSavelocIndex}");
   }
 
@@ -106,7 +118,7 @@ partial class TrickDetect
     }
 
     player.CurrentSavelocIndex = (player.CurrentSavelocIndex + 1) % player.SavedLocations.Count;
-    player.TeleportToSavedLocation();
+    TeleportDelay(player);
     player.Client.PrintToChat($" {ChatColors.Purple} Changed location to {ChatColors.Grey}#{player.CurrentSavelocIndex}");
   }
 
@@ -147,7 +159,12 @@ partial class TrickDetect
 
     var beforeIndex = player.CurrentSavelocIndex;
     player.CurrentSavelocIndex = index;
-    player.TeleportToSavedLocation();
+    AddTimer(1.0f, () =>
+    {
+      // Return a value of type 'object' to satisfy the Func<object> requirement
+    });
+
+    TeleportDelay(player);
     player.Client.PrintToChat($" {ChatColors.Purple} Switch current location from {ChatColors.Grey}#{beforeIndex} to {ChatColors.Grey}#{index}");
   }
 }

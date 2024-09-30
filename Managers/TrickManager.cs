@@ -59,7 +59,7 @@ public class TrickManager(DB database)
     {
       var trickRoute = trick.RouteTriggerPath;
 
-      if ((trickRoute + ">").StartsWith(player.RouteTriggerPath + ">") && player.StartType == trick.StartType)
+      if ((trickRoute + ",").StartsWith(player.RouteTriggerPath + ",") && player.StartType == trick.StartType)
       {
         if (player.Debug)
           player.Client.PrintToConsole($"Contain > {trick.Name} | {trickRoute} | {trick.Point} {trick.StartType}");
@@ -93,8 +93,8 @@ public class TrickManager(DB database)
 
   public async void CompleteTrick(Player player, Trick trick)
   {
-    var totalAvgSpeed = CalculateTotalAvgSpeed(player);
-    var totalTime = CalculateTotalTime(player);
+    var totalAvgSpeed = CalculateTotalAvgSpeed(player, trick);
+    var totalTime = CalculateTotalTime(player, trick);
 
     player.Client.PlayerPawn.Value!.HealthShotBoostExpirationTime = Server.CurrentTime + 1;
     Utilities.SetStateChanged(player.Client.PlayerPawn.Value, "CCSPlayerPawn", "m_flHealthShotBoostExpirationTime");
@@ -115,7 +115,7 @@ public class TrickManager(DB database)
         player.Client.PrintToConsole($"CompleteId {completeId}");
 
       if (isWR)
-        player.Client.ExecuteClientCommand("play sounds\\ambient\\ambient\\rainscapes\\thunder_close01.vsnd_c");
+        player.Client.ExecuteClientCommand("play sounds/ambient/ambience/rainscapes/thunder_close01.vsnd_c");
 
       player.Client.PrintToChat(trickMessage);
       player.Client.PrintToChat(timeMessage);
@@ -123,16 +123,50 @@ public class TrickManager(DB database)
     });
   }
 
-  private int CalculateTotalAvgSpeed(Player player)
+  private int CalculateTotalAvgSpeed(Player player, Trick trick)
   {
-    return (int)Math.Round(player.RouteTriggers.Sum(trigger => (trigger.AvgSpeedStartTouch ?? 0) + (trigger.AvgSpeedEndTouch ?? 0))) / player.RouteTriggers.Count;
+    if (trick.StartType == StartType.Velocity)
+    {
+      var trigger = player.RouteTriggers.First()!;
+      trigger.ProgressStartTouch = [];
+    }
+
+    double totalSpeed = 0;
+    int count = 0;
+
+    foreach (var routeTrigger in player.RouteTriggers)
+    {
+      if (routeTrigger.ProgressEndTouch != null)
+      {
+        foreach (var progress in routeTrigger.ProgressEndTouch)
+        {
+          totalSpeed += progress.Speed;
+          count++;
+        }
+      }
+
+      if (routeTrigger.ProgressStartTouch != null)
+      {
+        foreach (var progress in routeTrigger.ProgressStartTouch)
+        {
+          totalSpeed += progress.Speed;
+          count++;
+        }
+      }
+    }
+
+    return (int)Math.Round(totalSpeed / count);
   }
 
-  private double CalculateTotalTime(Player player)
+  private double CalculateTotalTime(Player player, Trick trick)
   {
     var firstTrigger = player.RouteTriggers.First();
     var lastTrigger = player.RouteTriggers.Last();
-    return (lastTrigger.TimeStartTouch ?? 0) - (firstTrigger.TimeEndTouch ?? 0);
+
+    if (trick.StartType == StartType.Velocity)
+      return ((float)lastTrigger.TimeStartTouch!) - ((float)firstTrigger.TimeStartTouch!);
+
+    return ((float)lastTrigger.TimeStartTouch!) - ((float)firstTrigger.TimeEndTouch!);
   }
 
   private string BuildTrickMessage(Player player, Trick trick)

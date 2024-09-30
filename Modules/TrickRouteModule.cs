@@ -37,16 +37,15 @@ public class TrickRouteModule(PlayerManager playerManager, TriggerManager trigge
         if (trigger == null || player.Client.Pawn.Value!.MoveType == MoveType_t.MOVETYPE_NOCLIP)
             return;
 
-        var speed = player.AvgSpeed();
         var routeTrigger = new RouteTrigger
         {
             TouchedTrigger = trigger,
-            SpeedEndTouch = player.Client.GetSpeed(),
             TimeStartTouch = Server.CurrentTime,
             TimeEndTouch = null,
-            AvgSpeedStartTouch = double.IsNaN(speed) ? null : speed,
-            AvgSpeedEndTouch = null,
+            ProgressStartTouch = player.PlayerProgressData,
+            ProgressEndTouch = null
         };
+        player.PlayerProgressData = [];
         player.RouteTriggers.Add(routeTrigger);
 
         trickManager.RouteChecker(player);
@@ -70,11 +69,10 @@ public class TrickRouteModule(PlayerManager playerManager, TriggerManager trigge
             var routeTrigger = new RouteTrigger
             {
                 TouchedTrigger = trigger,
-                SpeedEndTouch = player.Client.GetSpeed(),
                 TimeStartTouch = null,
                 TimeEndTouch = Server.CurrentTime,
-                AvgSpeedStartTouch = null,
-                AvgSpeedEndTouch = null,
+                ProgressEndTouch = player.PlayerProgressData,
+                ProgressStartTouch = null
             };
 
             // Если игрок решил не прыгать но покинул стартовую зону
@@ -91,12 +89,10 @@ public class TrickRouteModule(PlayerManager playerManager, TriggerManager trigge
             if (previousTrigger == null || previousTrigger.TouchedTrigger.Name != trigger.Name)
                 return;
 
-            if (previousTrigger.TimeEndTouch == null)
-            {
-                previousTrigger.TimeEndTouch = Server.CurrentTime;
-                previousTrigger.SpeedEndTouch = player.AvgSpeed();
-            }
+            previousTrigger.TimeEndTouch ??= Server.CurrentTime;
+            previousTrigger.ProgressEndTouch ??= player.PlayerProgressData;
         }
+        player.PlayerProgressData = [];
     }
 
     public void OnPlayerJump(EventOnJump e)
@@ -119,23 +115,10 @@ public class TrickRouteModule(PlayerManager playerManager, TriggerManager trigge
 
         foreach (var player in players)
         {
-            try
-            {
-                if (string.IsNullOrEmpty(player.RouteTriggerPath))
-                {
-                    player.ResetAverageSpeed();
-                }
-                else
-                {
-                    ++player.AvgSpeedTicked.Ticks;
-                    player.AvgSpeedTicked.TotalSpeed += player.Client.GetSpeed();
-                }
-            }
-            catch
-            {
-                player.ResetAverageSpeed();
-            }
-
+            if (!string.IsNullOrEmpty(player.RouteTriggerPath) && player.PlayerProgressData.Count < 1000000)
+                player.CollectPlayerProgress();
+            else if (player.PlayerProgressData.Count > 0)
+                player.PlayerProgressData = [];
         }
     }
 

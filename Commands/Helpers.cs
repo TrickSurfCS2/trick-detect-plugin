@@ -61,12 +61,20 @@ partial class TrickDetect
     var player = _playerManager.GetPlayer(client);
     var tricks = _trickManager.GetTricksByMap(player.SelectedMap);
 
-    player.Client.PrintToConsole($"RouteTriggerPath >>> {player.RouteTriggerPath}");
-    player.Client.PrintToConsole($"SelectedMap >>> {player.SelectedMap.Name}");
-    player.Client.PrintToConsole($"StartType >>> {player.StartType}");
-    player.Client.PrintToConsole($"StartSpeed >>> {player.StartSpeed}");
-    player.Client.PrintToConsole($"IsJumped >>> {player.IsJumped}");
-    player.Client.PrintToConsole($"RoutesMatched >>> {_trickManager.CheckRouteTrickMatching(tricks.allTricks, player, out Trick? _)}");
+    player.Client.PrintToConsole($"RouteTriggerPath > {player.RouteTriggerPath}");
+    player.Client.PrintToConsole($"SelectedMap > {player.SelectedMap.Name}");
+    player.Client.PrintToConsole($"StartType > {player.StartType}");
+    player.Client.PrintToConsole($"StartSpeed > {player.StartSpeed}");
+    player.Client.PrintToConsole($"IsJumped > {player.IsJumped}");
+    player.Client.PrintToConsole($"Permissions > {string.Join(",", player.Permissions)}");
+    player.Client.PrintToConsole($"RoutesMatched > {_trickManager.CheckRouteTrickMatching(tricks.allTricks, player, out Trick? _)}");
+    player.Client.PrintToConsole($"Triggers >");
+    foreach (var trigger in player.RouteTriggers)
+    {
+      player.Client.PrintToConsole($"| Name > {trigger.TouchedTrigger.Name}");
+      player.Client.PrintToConsole($"| Progress > {trigger.ProgressEndTouch?.Count} {trigger.ProgressStartTouch?.Count}");
+      player.Client.PrintToConsole($"| Time > {trigger.TimeEndTouch} {trigger.TimeStartTouch}");
+    }
   }
 
 

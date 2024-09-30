@@ -13,11 +13,10 @@ public class Trigger
 public class RouteTrigger
 {
   public required Trigger TouchedTrigger { get; set; }
-  public required double SpeedEndTouch { get; set; }
   public required float? TimeStartTouch { get; set; }
   public required float? TimeEndTouch { get; set; }
-  public required double? AvgSpeedStartTouch { get; set; } // Average speed from previous to current trigger
-  public required double? AvgSpeedEndTouch { get; set; } // Average speed inside current trigger
+  public required List<Player.PlayerProgress>? ProgressStartTouch { get; set; }
+  public required List<Player.PlayerProgress>? ProgressEndTouch { get; set; }
 }
 
 public class TriggersTrick

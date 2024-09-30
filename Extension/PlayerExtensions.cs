@@ -30,6 +30,38 @@ public static class PlayerExtensions
 		client.PlayerPawn.Value!.Render = Color.FromArgb(254, 254, 254, 254);
 	}
 
+	public static Location GetLocation(this CCSPlayerController client)
+	{
+		var pawn = client.PlayerPawn.Value!;
+
+		var origin = new DimensionVector
+		{
+			X = pawn.AbsOrigin!.X,
+			Y = pawn.AbsOrigin!.Y,
+			Z = pawn.AbsOrigin!.Z
+		};
+		var angle = new DimensionVector
+		{
+			X = pawn.EyeAngles!.X,
+			Y = pawn.EyeAngles!.Y,
+			Z = pawn.EyeAngles!.Z
+		};
+		var velocity = new DimensionVector
+		{
+			X = pawn.AbsVelocity!.X,
+			Y = pawn.AbsVelocity!.Y,
+			Z = pawn.AbsVelocity!.Z
+		};
+
+		return new Location
+		{
+			origin = origin,
+			angle = angle,
+			velocity = velocity,
+		};
+	}
+
+
 	public static void StripWeapons(this CCSPlayerController client)
 	{
 		foreach (var weapon in client!.PlayerPawn.Value!.WeaponServices!.MyWeapons)

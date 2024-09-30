@@ -163,6 +163,9 @@ public partial class TrickDetect
 
     if (entName != null && Helpers.ClientIsValidAndAlive(client) && player != null)
     {
+      if (player.Teleporting)
+        return HookResult.Continue;
+
       var triggerName = entName.ToString();
       var eventMsg = new EventOnStartTouchEvent
       {
@@ -188,6 +191,9 @@ public partial class TrickDetect
 
     if (entName != null && Helpers.ClientIsValidAndAlive(client) && player != null)
     {
+      if (player.Teleporting)
+        return HookResult.Continue;
+
       var triggerName = entName.ToString();
       var eventMsg = new EventOnEndTouchEvent
       {

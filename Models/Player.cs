@@ -1,5 +1,6 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 
 namespace TrickDetect;
@@ -28,82 +29,50 @@ public class Player
     public required string Name { get; set; }
   }
 
-  public class PlayerSpeed
+  public class PlayerProgress
   {
-    public required double Ticks { get; set; }
-    public required double TotalSpeed { get; set; }
+    public required double Speed { get; set; }
+    public required Location Location { get; set; }
   }
 
   public Player(int slot, Map map)
   {
     Slot = slot;
     SelectedMap = map;
-    AvgSpeedTicked = new AverageSpeed
-    {
-      Ticks = 0,
-      TotalSpeed = 0.0f
-    };
+    SavedLocations = new();
+    RouteTriggers = new();
+    PlayerProgressData = new();
+    Permissions = [];
+    CurrentSavelocIndex = 0;
+    StartSpeed = 0.0;
+    StartType = StartType.Velocity;
   }
 
   public int Slot { get; init; }
   public PlayerInfo? Info;
   public Map SelectedMap { get; set; }
 
-  public List<Location> SavedLocations { get; set; } = new();
-  public int CurrentSavelocIndex { get; set; } = 0;
+  public List<Location> SavedLocations { get; set; }
+  public int CurrentSavelocIndex { get; set; }
   public bool Teleporting { get; set; } = false;
-  public Permission[] Permissions { get; set; } = [];
+  public Permission[] Permissions { get; set; }
   public bool ShowHud { get; set; } = true;
   public bool Debug { get; set; } = false;
 
   // === Trick data === //
-  public List<RouteTrigger> RouteTriggers { get; set; } = new();
-  public double StartSpeed { get; set; } = 0.0;
-  public StartType StartType { get; set; } = StartType.Velocity;
+  public List<RouteTrigger> RouteTriggers { get; set; }
+  public List<PlayerProgress> PlayerProgressData { get; set; }
+  public double StartSpeed { get; set; }
+  public StartType StartType { get; set; }
   public bool IsJumped { get; set; } = false;
-  public AverageSpeed AvgSpeedTicked { get; set; }
   public string RouteTriggerPath => RouteTriggers.Any() ? string.Join(",", RouteTriggers.Select(t => t.TouchedTrigger.Name)) : string.Empty;
-  public double AvgSpeed()
-  {
-    var speed = AvgSpeedTicked.TotalSpeed / AvgSpeedTicked.Ticks;
-    ResetAverageSpeed();
-
-    return speed;
-  }
   // ================== //
 
   public CCSPlayerController Client => Utilities.GetPlayerFromSlot(Slot)!;
 
   public void SaveCurrentLocation()
   {
-    var pawn = Client.PlayerPawn.Value!;
-
-    var origin = new DimensionVector
-    {
-      X = pawn.AbsOrigin!.X,
-      Y = pawn.AbsOrigin!.Y,
-      Z = pawn.AbsOrigin!.Z
-    };
-    var angle = new DimensionVector
-    {
-      X = pawn.EyeAngles!.X,
-      Y = pawn.EyeAngles!.Y,
-      Z = pawn.EyeAngles!.Z
-    };
-    var velocity = new DimensionVector
-    {
-      X = pawn.AbsVelocity!.X,
-      Y = pawn.AbsVelocity!.Y,
-      Z = pawn.AbsVelocity!.Z
-    };
-
-    var location = new Location
-    {
-      origin = origin,
-      angle = angle,
-      velocity = velocity,
-    };
-
+    var location = Client.GetLocation();
     SavedLocations.Add(location);
     CurrentSavelocIndex = SavedLocations.Count - 1;
   }
@@ -118,33 +87,33 @@ public class Player
 
     var location = SavedLocations[CurrentSavelocIndex];
 
-    Teleporting = true;
     ResetTrickProgress();
 
-    Server.NextFrame(() =>
-    {
-      Client.PlayerPawn.Value!.Teleport(
-        location.origin.ToVector(),
-        location.angle.ToQAngle(),
-        location.velocity.ToVector()
-      );
-      Teleporting = false;
+    Client.PlayerPawn.Value!.Teleport(
+      location.origin.ToVector(),
+      location.angle.ToQAngle(),
+      location.velocity.ToVector()
+    );
 
-      if (Debug)
-        Client.PrintToChat($"{ChatColors.Grey}Teleported");
-    });
+    if (Debug)
+      Client.PrintToChat($"{ChatColors.Grey}Teleported");
   }
 
-  public void ResetAverageSpeed()
+  private void AddTimer(float v, Func<object> value, object rEPEAT)
   {
-    if (AvgSpeedTicked.Ticks == 0)
-      return;
+    throw new NotImplementedException();
+  }
 
-    AvgSpeedTicked = new AverageSpeed
+  public void CollectPlayerProgress()
+  {
+    var location = Client.GetLocation();
+    var progress = new PlayerProgress
     {
-      Ticks = 0,
-      TotalSpeed = 0.0f
+      Location = location,
+      Speed = Client.GetSpeed()
     };
+
+    PlayerProgressData.Add(progress);
   }
 
   public void SetupStartSpeed()
@@ -161,9 +130,9 @@ public class Player
   public void ResetTrickProgress()
   {
     IsJumped = false;
-    RouteTriggers = new();
+    RouteTriggers.Clear();
+    PlayerProgressData.Clear();
 
     SetupStartSpeed();
-    ResetAverageSpeed();
   }
 }
