@@ -87,14 +87,13 @@ public class TrickRouteModule(PlayerManager playerManager, TriggerManager trigge
         {
             var previousTrigger = player.RouteTriggers.Find(f => f.TouchedTrigger.Id == trigger.Id);
 
-            // Check if the previous start touch trigger was triggered before the current one
-            if (previousTrigger == null || previousTrigger.TouchedTrigger.Name != triggerName)
+            // Проверить если StartTouch сработал ранее чем EndTouch
+            if (previousTrigger == null || previousTrigger.TouchedTrigger.Name != trigger.Name)
                 return;
 
             if (previousTrigger.TimeEndTouch == null)
             {
                 previousTrigger.TimeEndTouch = Server.CurrentTime;
-                previousTrigger.SpeedEndTouch = player.Client.GetSpeed();
                 previousTrigger.SpeedEndTouch = player.AvgSpeed();
             }
         }

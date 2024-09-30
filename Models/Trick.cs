@@ -10,10 +10,7 @@ public class Trick
   public required DateTime UpdatedAt { get; set; }
   public required List<Trigger> Triggers { get; set; }
 
-  public string GetRouteTriggerPath()
-  {
-    return string.Join(">", Triggers.Select(t => t.Name));
-  }
+  public string RouteTriggerPath => Triggers.Any() ? string.Join(",", Triggers.Select(t => t.Name)) : string.Empty;
 }
 
 public class TrickWR

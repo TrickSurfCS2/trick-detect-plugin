@@ -54,9 +54,14 @@ public partial class TrickDetect : BasePlugin, IPluginConfig<TrickDetectConfig>
     {
       Logger.LogInformation($"Load data for map {map.FullName}");
       _triggerManager.LoadAndSetMapTriggers(map).Wait();
-      Logger.LogInformation($"Loaded triggers {_triggerManager.GetTriggersByMap(map).Count()}");
       _trickManager.LoadAndSetMapTricks(map).Wait();
-      Logger.LogInformation($"Loaded tricks {_trickManager.GetTricksByMap(map).Count()}");
+      Logger.LogInformation($"Loaded all data");
+      Logger.LogInformation($"Tricks counts {_trickManager.GetTricksByMap(map).allTricks.Count()}");
+      foreach (var item in _trickManager.GetTricksByMap(map).tricksRoutesContain)
+        Logger.LogInformation($"Tricks paths {item.Key} {item.Value.Count()}");
+      foreach (var item in _trickManager.GetTricksByMap(map).tricksRoutesUnique)
+        Logger.LogInformation($"Tricks unique paths {item.Value.Count()}");
+      Logger.LogInformation($"Triggers counts {_triggerManager.GetTriggersByMap(map).Count()}");
     }
   }
 }

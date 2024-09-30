@@ -74,7 +74,7 @@ partial class TrickDetect
       return;
     }
 
-    var tricks = _trickManager.GetTricksByMap(map);
+    var tricks = _trickManager.GetTricksByMap(map).allTricks!;
 
     if (trickName != null)
       tricks = tricks.Where(trick => trick.Name.Replace(" ", "_").ToLower().StartsWith(trickName)).ToArray();
@@ -82,7 +82,53 @@ partial class TrickDetect
     foreach (var trick in tricks)
     {
       client.PrintToConsole($"- {trick.Name} {trick.Point} {trick.StartType}");
-      client.PrintToConsole($"> {trick.GetRouteTriggerPath()}");
+      client.PrintToConsole($"> {trick.RouteTriggerPath}");
+    }
+  }
+
+  [ConsoleCommand("trickspaths", "Show all tricks path for map")]
+  [CommandHelper(minArgs: 1, usage: "<trickspaths> ski2", whoCanExecute: CommandUsage.CLIENT_ONLY)]
+  public void OnTricksPathMap(CCSPlayerController client, CommandInfo command)
+  {
+    var pawn = client.PlayerPawn.Value;
+    if (pawn == null || command.ArgCount < 2)
+      return;
+
+    var map = _mapManager.GetMapByName(command.GetArg(1));
+    var type = command.GetArg(2);
+
+    if (map == null)
+    {
+      client.PrintToChat($" {ChatColors.White}Cannot find map");
+      return;
+    }
+
+    var tricks = _trickManager.GetTricksByMap(map)!;
+
+    if (type == null || type == "all")
+    {
+      foreach (var trick in tricks.tricksRoutesContain)
+      {
+        client.PrintToConsole($"- {trick.Key} {trick.Value.Count()}");
+
+        foreach (var tricksPaths in trick.Value)
+        {
+          client.PrintToConsole($"- {tricksPaths.Key} {tricksPaths.Value}");
+        }
+      }
+    }
+    else
+    {
+      foreach (var trick in tricks.tricksRoutesUnique)
+      {
+
+        client.PrintToConsole($"- {trick.Key} {trick.Value.Count()}");
+
+        foreach (var tricksPaths in trick.Value)
+        {
+          client.PrintToConsole($"- {tricksPaths.Key} {tricksPaths.Value.Name}");
+        }
+      }
     }
   }
 }

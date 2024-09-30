@@ -12,7 +12,11 @@ public enum StartType
 
 public enum Permission
 {
-  UpdateTricks,
+  UpdateTrick,
+  CreateTrick,
+  DeleteTrick,
+  BanUser,
+  Teleport
 }
 
 public class Player
@@ -24,7 +28,7 @@ public class Player
     public required string Name { get; set; }
   }
 
-  public class AverageSpeed
+  public class PlayerSpeed
   {
     public required double Ticks { get; set; }
     public required double TotalSpeed { get; set; }
@@ -58,7 +62,7 @@ public class Player
   public StartType StartType { get; set; } = StartType.Velocity;
   public bool IsJumped { get; set; } = false;
   public AverageSpeed AvgSpeedTicked { get; set; }
-  public string RouteTriggerPath => RouteTriggers.Any() ? string.Join(">", RouteTriggers.Select(t => t.TouchedTrigger.Name)) : string.Empty;
+  public string RouteTriggerPath => RouteTriggers.Any() ? string.Join(",", RouteTriggers.Select(t => t.TouchedTrigger.Name)) : string.Empty;
   public double AvgSpeed()
   {
     var speed = AvgSpeedTicked.TotalSpeed / AvgSpeedTicked.Ticks;
@@ -149,7 +153,7 @@ public class Player
     var maxSpeed = TrickDetect._cfg!.PreSpeed;
 
     StartSpeed = speed;
-    StartType = speed < 400
+    StartType = speed < maxSpeed
         ? StartType.PreStrafe
         : StartType.Velocity;
   }
@@ -158,8 +162,8 @@ public class Player
   {
     IsJumped = false;
     RouteTriggers = new();
-    StartSpeed = 0.0;
-    StartType = StartType.Velocity;
+
+    SetupStartSpeed();
     ResetAverageSpeed();
   }
 }
