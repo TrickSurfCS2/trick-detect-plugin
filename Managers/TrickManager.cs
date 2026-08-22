@@ -209,10 +209,9 @@ public class TrickManager(DB database)
     {
       isWR = true;
       _ = database.ExecuteAsync(@"
-            INSERT INTO public.""speed_wr"" (""completeId"", ""trickId"")
+            INSERT INTO `speed_wr` (`completeId`, `trickId`)
             VALUES (@completeId, @trickId) 
-            ON CONFLICT (""trickId"") 
-            DO UPDATE SET ""completeId"" = EXCLUDED.""completeId"";",
+            ON DUPLICATE KEY UPDATE `completeId` = VALUES(`completeId`);",
       new { completeId = completeId, trickId = trick.Id });
     }
 
@@ -220,10 +219,9 @@ public class TrickManager(DB database)
     {
       isWR = true;
       _ = database.ExecuteAsync(@"
-            INSERT INTO public.""time_wr"" (""completeId"", ""trickId"")
+            INSERT INTO `time_wr` (`completeId`, `trickId`)
             VALUES (@completeId, @trickId) 
-            ON CONFLICT (""trickId"") 
-            DO UPDATE SET ""completeId"" = EXCLUDED.""completeId"";",
+            ON DUPLICATE KEY UPDATE `completeId` = VALUES(`completeId`);",
       new { completeId = completeId, trickId = trick.Id });
     }
     return isWR;
@@ -267,16 +265,16 @@ public class TrickManager(DB database)
   {
     return await database.QueryAsync<Trick>(@"
         SELECT 
-            id as ""Id"",
-            name as ""Name"",
-            point as ""Point"",
-            ""authorId"" as ""AuthorId"",
-            ""mapId"" as ""MapId"",
-            ""startType"" as ""StartType"",
-            ""createdAt"" as ""CreatedAt"",
-            ""updatedAt"" as ""UpdatedAt""
-        FROM public.trick as t
-        WHERE t.""mapId"" = @mapId;
+            id AS `Id`,
+            name AS `Name`,
+            point AS `Point`,
+            `authorId` AS `AuthorId`,
+            `mapId` AS `MapId`,
+            `startType` AS `StartType`,
+            `createdAt` AS `CreatedAt`,
+            `updatedAt` AS `UpdatedAt`
+        FROM `trick` AS t
+        WHERE t.`mapId` = @mapId;
         ",
         new { mapId = map.Id }
     );
@@ -286,17 +284,17 @@ public class TrickManager(DB database)
   {
     return await database.QueryAsync<TriggersTrick>(@"
         SELECT 
-            t.""id"" as ""TrickId"",
-            trig.""id"" as ""TriggerId"",
-            trig.""name"" as ""TriggerName"",
-            trig.""fullName"" as ""TriggerFullName"",
-            trig.""preview"" as ""TriggerPreview"",
-            trig.""createdAt"" as ""TriggerCreatedAt"",
-            trig.""updatedAt"" as ""TriggerUpdatedAt""
-        FROM public.""trick"" as t
-        JOIN public.""route"" as r ON t.""id"" = r.""trickId""
-        JOIN public.""trigger"" as trig ON r.""triggerId"" = trig.""id""
-        WHERE t.""mapId"" = @mapId;
+            t.id AS `TrickId`,
+            trig.id AS `TriggerId`,
+            trig.name AS `TriggerName`,
+            trig.`fullName` AS `TriggerFullName`,
+            trig.preview AS `TriggerPreview`,
+            trig.`createdAt` AS `TriggerCreatedAt`,
+            trig.`updatedAt` AS `TriggerUpdatedAt`
+        FROM `trick` AS t
+        JOIN `route` AS r ON t.id = r.`trickId`
+        JOIN `trigger` AS trig ON r.`triggerId` = trig.id
+        WHERE t.`mapId` = @mapId;
         ",
         new { mapId = map.Id }
     );
@@ -351,35 +349,41 @@ public class TrickManager(DB database)
   {
     var wr = await database.QueryAsync<TrickWR>(@"
         SELECT 
-            twr.""time"" as ""TimeWR"",
-            twr_user.""username"" as ""UsernameTimeWR"",
-            swr.""speed"" as ""SpeedWR"",
-            swr_user.""username"" as ""UsernameSpeedWR""
-        FROM public.""trick"" as t
+            twr.`time` AS `TimeWR`,
+            twr_user.username AS `UsernameTimeWR`,
+            swr.speed AS `SpeedWR`,
+            swr_user.username AS `UsernameSpeedWR`
+        FROM `trick` AS t
         LEFT JOIN 
-            public.""complete"" twr ON twr.""id"" = 
-                (SELECT twri.""completeId"" FROM public.""time_wr"" as twri WHERE twri.""trickId"" = @trickId)
+            `complete` twr ON twr.id = 
+                (SELECT twri.`completeId` FROM `time_wr` AS twri WHERE twri.`trickId` = @trickId LIMIT 1)
         LEFT JOIN 
-            public.""complete"" swr ON swr.""id"" = 
-                (SELECT swri.""completeId"" FROM public.""speed_wr"" as swri WHERE swri.""trickId"" = @trickId)
+            `complete` swr ON swr.id = 
+                (SELECT swri.`completeId` FROM `speed_wr` AS swri WHERE swri.`trickId` = @trickId LIMIT 1)
         LEFT JOIN 
-            public.""user"" twr_user ON twr.""userId"" = twr_user.""id""
+            `user` twr_user ON twr.`userId` = twr_user.id
         LEFT JOIN 
-            public.""user"" swr_user ON swr.""userId"" = swr_user.""id""
-        WHERE t.""id"" = @trickId;
+            `user` swr_user ON swr.`userId` = swr_user.id
+        WHERE t.id = @trickId;
       ",
       new { trickId = trickId }
     );
 
-    return wr.First();
+    return wr.FirstOrDefault() ?? new TrickWR
+    {
+      TimeWR = null,
+      SpeedWR = null,
+      UsernameTimeWR = null,
+      UsernameSpeedWR = null
+    };
   }
 
   public async Task<int> InsertComplete(Trick trick, Player player, int speed, double time)
   {
     var completeId = await database.QueryAsyncSingle<int>(@"
-      INSERT INTO ""complete""(""userId"", ""trickId"", speed, ""time"") 
-      VALUES(@userId, @trickId, @speed, @time)
-      RETURNING id;
+      INSERT INTO `complete` (`userId`, `trickId`, speed, `time`) 
+      VALUES (@userId, @trickId, @speed, @time);
+      SELECT LAST_INSERT_ID();
     ",
       new { userId = player.Info!.Id, trickId = trick.Id, speed = speed, time = time }
     );

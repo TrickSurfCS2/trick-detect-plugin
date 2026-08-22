@@ -23,14 +23,14 @@ public class TriggerManager(DB database)
   {
     var triggers = await database.QueryAsync<Trigger>(@"
       SELECT 
-        id AS ""Id"",
-        name AS ""Name"",
-        ""fullName"" AS ""FullName"",
-        preview AS ""PreviewImage"",
-        ""createdAt"" AS ""CreatedAt"",
-        ""updatedAt"" AS ""UpdatedAt""
-      FROM public.trigger as t
-      WHERE t.""mapId"" = @mapId;
+        id AS `Id`,
+        name AS `Name`,
+        `fullName` AS `FullName`,
+        preview AS `PreviewImage`,
+        `createdAt` AS `CreatedAt`,
+        `updatedAt` AS `UpdatedAt`
+      FROM `trigger` AS t
+      WHERE t.`mapId` = @mapId;
       ",
       new { mapId = map.Id }
       );

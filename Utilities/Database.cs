@@ -1,7 +1,8 @@
 using Dapper;
 using Microsoft.Extensions.Logging;
-using Npgsql;
+using MySqlConnector;
 using System.Data;
+using System.Text.Json;
 
 namespace TrickDetect.Database;
 
@@ -9,7 +10,7 @@ public class DB(string? dbConnectionString)
 {
 	private readonly string? dbConnectionString = dbConnectionString;
 
-	public NpgsqlConnection GetConnection()
+	public MySqlConnection GetConnection()
 	{
 		try
 		{
@@ -18,7 +19,7 @@ public class DB(string? dbConnectionString)
 				throw new ArgumentException("Database connection string cannot be null or empty.", nameof(dbConnectionString));
 			}
 
-			var connection = new NpgsqlConnection(dbConnectionString);
+			var connection = new MySqlConnection(dbConnectionString);
 			connection.Open();
 			return connection;
 		}
@@ -29,11 +30,11 @@ public class DB(string? dbConnectionString)
 		}
 	}
 
-	public async Task<NpgsqlConnection> GetConnectionAsync()
+	public async Task<MySqlConnection> GetConnectionAsync()
 	{
 		try
 		{
-			var connection = new NpgsqlConnection(dbConnectionString);
+			var connection = new MySqlConnection(dbConnectionString);
 			await connection.OpenAsync();
 			return connection;
 		}
@@ -50,7 +51,7 @@ public class DB(string? dbConnectionString)
 
 		try
 		{
-			return connection.FullState == ConnectionState.Open;
+			return connection.State == ConnectionState.Open;
 		}
 		catch
 		{
@@ -93,11 +94,31 @@ public class DoubleArrayToFloatArrayMapper : SqlMapper.TypeHandler<float[]>
 {
 	public override float[] Parse(object value)
 	{
+		if (value is float[] floatArray)
+		{
+			return floatArray;
+		}
 		if (value is double[] doubleArray)
 		{
 			return Array.ConvertAll(doubleArray, d => (float)d);
 		}
-		throw new InvalidCastException("Unable to cast object of type 'System.Double[]' to type 'System.Single[]'.");
+		if (value is string str)
+		{
+			try
+			{
+				var deserialized = JsonSerializer.Deserialize<float[]>(str);
+				if (deserialized != null)
+					return deserialized;
+			}
+			catch
+			{
+				return str.Trim('[', ']')
+					.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+					.Select(s => float.Parse(s, System.Globalization.CultureInfo.InvariantCulture))
+					.ToArray();
+			}
+		}
+		throw new InvalidCastException($"Unable to cast object of type '{value?.GetType()}' to type 'System.Single[]'.");
 	}
 
 #nullable disable
@@ -106,7 +127,7 @@ public class DoubleArrayToFloatArrayMapper : SqlMapper.TypeHandler<float[]>
 		if (value == null)
 			parameter.Value = DBNull.Value;
 		else
-			parameter.Value = Array.ConvertAll(value, f => (double)f);
+			parameter.Value = JsonSerializer.Serialize(value);
 	}
 #nullable enable
 }

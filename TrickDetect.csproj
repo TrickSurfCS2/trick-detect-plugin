@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -10,13 +10,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CounterStrikeSharp.API" Version="1.0.265" />
+    <PackageReference Include="CounterStrikeSharp.API" Version="1.0.368" />
     <PackageReference Include="Dapper" Version="2.1.35" />
-    <PackageReference Include="Npgsql" Version="8.0.3" />
+    <PackageReference Include="MySqlConnector" Version="2.3.7" />
   </ItemGroup>
 
   <!-- Добавляем задачу копирования файлов после сборки -->
-  <Target Name="CopyFilesAfterBuild" AfterTargets="Build">
+  <Target Name="CopyFilesAfterBuild" AfterTargets="Build" Condition="Exists('/run/media/evai/KINGSTON/Steam/game/csgo/addons/counterstrikesharp/plugins/TrickDetect')">
     <ItemGroup>
       <SourceFiles Include="$(OutputPath)**\*.*" />
     </ItemGroup>

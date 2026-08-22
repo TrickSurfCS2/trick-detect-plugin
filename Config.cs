@@ -1,6 +1,6 @@
 using CounterStrikeSharp.API.Core;
 using System.Text.Json.Serialization;
-using Npgsql;
+using MySqlConnector;
 using TrickDetect.Database;
 using Microsoft.Extensions.Logging;
 
@@ -17,16 +17,16 @@ public partial class TrickDetect
       throw new Exception("[TrickDetect] You need to setup Database credentials in config!");
     }
 
-    var builder = new NpgsqlConnectionStringBuilder
+    var builder = new MySqlConnectionStringBuilder
     {
-      Host = config.DatabaseHost,
+      Server = config.DatabaseHost,
       Database = config.DatabaseName,
-      Username = config.DatabaseUser,
+      UserID = config.DatabaseUser,
       Password = config.DatabasePassword,
-      Port = config.DatabasePort,
+      Port = (uint)config.DatabasePort,
       Pooling = true,
-      MinPoolSize = 0,
-      MaxPoolSize = 640,
+      MinimumPoolSize = 0,
+      MaximumPoolSize = 640,
     };
 
     _database = new DB(builder.ConnectionString);
@@ -50,7 +50,7 @@ public class TrickDetectConfig : BasePluginConfig
   public string DatabaseHost { get; set; } = "";
 
   [JsonPropertyName("DatabasePort")]
-  public int DatabasePort { get; set; } = 5432;
+  public int DatabasePort { get; set; } = 3306;
 
   [JsonPropertyName("DatabaseUser")]
   public string DatabaseUser { get; set; } = "";

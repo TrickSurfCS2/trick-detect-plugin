@@ -1,4 +1,4 @@
-﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities;
 using System.Text.RegularExpressions;
@@ -30,7 +30,7 @@ internal class Helpers
 	public static List<CCSPlayerController> GetValidPlayers()
 	{
 		return Utilities.GetPlayers().FindAll(p => p is
-		{ IsValid: true, IsBot: false, Connected: PlayerConnectedState.PlayerConnected });
+		{ IsValid: true, IsBot: false, Connected: PlayerConnectedState.Connected });
 	}
 
 	public static IEnumerable<CCSPlayerController?> GetValidPlayersWithBots()

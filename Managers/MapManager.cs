@@ -31,14 +31,14 @@ public class MapManager(DB database)
 
     var maps = await database.QueryAsync<Map>(@"
       SELECT 
-        id AS ""Id"",
-        name AS ""Name"",
-        ""fullName"" AS ""FullName"",
-        preview AS ""PreviewImage"",
-        ""createdAt"" AS ""CreatedAt"",
-        ""updatedAt"" AS ""UpdatedAt"",
-        origin AS ""Origin""
-      FROM public.""map""
+        id AS `Id`,
+        name AS `Name`,
+        `fullName` AS `FullName`,
+        preview AS `PreviewImage`,
+        `createdAt` AS `CreatedAt`,
+        `updatedAt` AS `UpdatedAt`,
+        origin AS `Origin`
+      FROM `map`;
     ");
 
     _maps = maps.ToArray();

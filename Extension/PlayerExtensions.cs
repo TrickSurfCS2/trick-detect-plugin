@@ -1,4 +1,4 @@
-﻿using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core;
 using System.Drawing;
 
 namespace TrickDetect;
@@ -64,18 +64,13 @@ public static class PlayerExtensions
 
 	public static void StripWeapons(this CCSPlayerController client)
 	{
-		foreach (var weapon in client!.PlayerPawn.Value!.WeaponServices!.MyWeapons)
+		var weaponServices = client?.PlayerPawn?.Value?.WeaponServices;
+		if (weaponServices == null) return;
+
+		foreach (var weapon in weaponServices.MyWeapons)
 		{
 			if (!weapon.IsValid || weapon.Value == null || !weapon.Value.IsValid || !weapon.Value.DesignerName.Contains("weapon_"))
 				continue;
-
-			CCSWeaponBaseGun gun = weapon.Value.As<CCSWeaponBaseGun>();
-
-			if (weapon.Value.Entity == null) continue;
-			if (!weapon.Value.OwnerEntity.IsValid) continue;
-			if (gun.Entity == null) continue;
-			if (!gun.IsValid) continue;
-			if (!gun.VisibleinPVS) continue;
 
 			try
 			{
