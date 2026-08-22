@@ -20,37 +20,56 @@ public static class PlayerExtensions
 
 		return steamId3;
 	}
-	public static double GetSpeed(this CCSPlayerController client)
+	public static double GetSpeed(this CCSPlayerController? client)
 	{
-		return Math.Round(client.PlayerPawn.Value!.AbsVelocity.Length2D());
+		if (client == null || !client.IsValid)
+			return 0;
+
+		var pawn = client.PlayerPawn?.Value;
+		if (pawn == null || !pawn.IsValid || pawn.AbsVelocity == null)
+			return 0;
+
+		return Math.Round(pawn.AbsVelocity.Length2D());
 	}
 
-	public static void HideLegs(this CCSPlayerController client)
+	public static void HideLegs(this CCSPlayerController? client)
 	{
-		client.PlayerPawn.Value!.Render = Color.FromArgb(254, 254, 254, 254);
+		if (client == null || !client.IsValid)
+			return;
+
+		var pawn = client.PlayerPawn?.Value;
+		if (pawn == null || !pawn.IsValid)
+			return;
+
+		pawn.Render = Color.FromArgb(254, 254, 254, 254);
 	}
 
-	public static Location GetLocation(this CCSPlayerController client)
+	public static Location? GetLocation(this CCSPlayerController? client)
 	{
-		var pawn = client.PlayerPawn.Value!;
+		if (client == null || !client.IsValid)
+			return null;
+
+		var pawn = client.PlayerPawn?.Value;
+		if (pawn == null || !pawn.IsValid)
+			return null;
 
 		var origin = new DimensionVector
 		{
-			X = pawn.AbsOrigin!.X,
-			Y = pawn.AbsOrigin!.Y,
-			Z = pawn.AbsOrigin!.Z
+			X = pawn.AbsOrigin?.X ?? 0f,
+			Y = pawn.AbsOrigin?.Y ?? 0f,
+			Z = pawn.AbsOrigin?.Z ?? 0f
 		};
 		var angle = new DimensionVector
 		{
-			X = pawn.EyeAngles!.X,
-			Y = pawn.EyeAngles!.Y,
-			Z = pawn.EyeAngles!.Z
+			X = pawn.EyeAngles?.X ?? 0f,
+			Y = pawn.EyeAngles?.Y ?? 0f,
+			Z = 0f
 		};
 		var velocity = new DimensionVector
 		{
-			X = pawn.AbsVelocity!.X,
-			Y = pawn.AbsVelocity!.Y,
-			Z = pawn.AbsVelocity!.Z
+			X = pawn.AbsVelocity?.X ?? 0f,
+			Y = pawn.AbsVelocity?.Y ?? 0f,
+			Z = pawn.AbsVelocity?.Z ?? 0f
 		};
 
 		return new Location

@@ -18,11 +18,15 @@ public class HudModule(PlayerManager playerManager)
         public required double StartSpeed { get; set; }
     }
 
-    private HudData BuildHudData(Player player)
+    private HudData? BuildHudData(Player player)
     {
+        var client = player.Client;
+        if (!Helpers.ClientIsValidAndAlive(client))
+            return null;
+
         var hudData = new HudData
         {
-            Speed = Math.Round(player.Client.PlayerPawn.Value!.AbsVelocity.Length2D()),
+            Speed = client.GetSpeed(),
             StartSpeed = player.StartSpeed,
         };
 
@@ -40,15 +44,17 @@ public class HudModule(PlayerManager playerManager)
 
     private void TimerPrintHtml(Player player, string hudContent)
     {
-        if (!player.ShowHud)
+        var client = player.Client;
+        if (!Helpers.ClientIsValidAndAlive(client))
         {
             return;
         }
+
         var @event = new EventShowSurvivalRespawnStatus(false)
         {
             LocToken = hudContent,
             Duration = 5,
-            Userid = player.Client
+            Userid = client
         };
         @event.FireEvent(false);
         @event = null;
@@ -60,7 +66,13 @@ public class HudModule(PlayerManager playerManager)
 
         foreach (var player in players)
         {
+            if (!player.ShowHud)
+                continue;
+
             var hudData = BuildHudData(player);
+            if (hudData == null)
+                continue;
+
             var hudContent = RenderHud(hudData);
             TimerPrintHtml(player, hudContent);
         }

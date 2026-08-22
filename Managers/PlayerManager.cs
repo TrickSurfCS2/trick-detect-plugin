@@ -9,19 +9,36 @@ public class PlayerManager(DB database)
 
   public void AddPlayer(Player player)
   {
+    _players.RemoveAll(p => p.Slot == player.Slot);
     _players.Add(player);
   }
 
-  public void RemovePlayer(CCSPlayerController client)
+  public void RemovePlayer(int slot)
   {
-    var playerToRemove = _players.FirstOrDefault(p => p.Slot == client.Slot);
-    if (playerToRemove != null)
-      _players.Remove(playerToRemove);
+    _players.RemoveAll(p => p.Slot == slot);
   }
 
-  public Player GetPlayer(CCSPlayerController client)
+  public void RemovePlayer(CCSPlayerController? client)
   {
-    return _players.FirstOrDefault(p => p.Slot == client.Slot)!;
+    if (client == null) return;
+    RemovePlayer(client.Slot);
+  }
+
+  public void RemovePlayer(Player? player)
+  {
+    if (player == null) return;
+    RemovePlayer(player.Slot);
+  }
+
+  public Player? GetPlayer(CCSPlayerController? client)
+  {
+    if (client == null) return null;
+    return _players.FirstOrDefault(p => p.Slot == client.Slot);
+  }
+
+  public Player? GetPlayer(int slot)
+  {
+    return _players.FirstOrDefault(p => p.Slot == slot);
   }
 
   public List<Player> GetPlayerList()

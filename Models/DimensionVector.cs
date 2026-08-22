@@ -22,7 +22,7 @@ public class DimensionVector
 
   public QAngle ToQAngle()
   {
-    return new QAngle(X, Y, Z);
+    return new QAngle(X, Y, 0f);
   }
 
   public override string ToString()

@@ -14,9 +14,11 @@ public partial class TrickDetect
     RegisterListener<Listeners.OnMapStart>(OnMapStart);
     RegisterListener<Listeners.OnGameServerSteamAPIActivated>(OnGameServerSteamAPIActivated);
     RegisterListener<Listeners.OnTick>(() => _eventsManager.Publish(new EventOnTickEvent()));
+    RegisterListener<Listeners.OnClientDisconnectPost>(OnClientDisconnectPost);
 
     // Events
     RegisterEventHandler<EventPlayerConnectFull>(OnEventPlayerConnectFull);
+    RegisterEventHandler<EventPlayerDisconnect>(OnEventPlayerDisconnect);
     RegisterEventHandler<EventRoundStart>(OnEventRoundStart);
     RegisterEventHandler<EventPlayerJump>(OnEventPlayerJump);
     RegisterEventHandler<EventPlayerSpawn>(OnEventPlayerSpawn);
@@ -43,6 +45,11 @@ public partial class TrickDetect
 
   }
 
+  private void OnClientDisconnectPost(int slot)
+  {
+    _playerManager.RemovePlayer(slot);
+  }
+
   // Events
   private HookResult OnEventPlayerConnectFull(EventPlayerConnectFull @event, GameEventInfo info)
   {
@@ -52,6 +59,25 @@ public partial class TrickDetect
       return HookResult.Continue;
 
     var eventMsg = new EventOnPlayerConnect
+    {
+      Name = client.PlayerName,
+      Slot = client.Slot,
+      SteamId = client.SteamID.ToString()
+    };
+
+    _eventsManager.Publish(eventMsg);
+
+    return HookResult.Continue;
+  }
+
+  private HookResult OnEventPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
+  {
+    CCSPlayerController? client = @event.Userid;
+
+    if (client == null || client.IsBot || !client.IsValid || !client.UserId.HasValue)
+      return HookResult.Continue;
+
+    var eventMsg = new EventOnPlayerDisconnect
     {
       Name = client.PlayerName,
       Slot = client.Slot,
@@ -156,8 +182,11 @@ public partial class TrickDetect
     if (activator == null || caller == null || activator.DesignerName != "player")
       return HookResult.Continue;
 
-    var pawn = new CCSPlayerPawn(activator.Handle).Controller.Value!.Handle;
-    var client = new CCSPlayerController(pawn);
+    var playerPawn = new CCSPlayerPawn(activator.Handle);
+    if (!playerPawn.IsValid || playerPawn.Controller.Value == null || !playerPawn.Controller.Value.IsValid)
+      return HookResult.Continue;
+
+    var client = playerPawn.Controller.Value.As<CCSPlayerController>();
     var entName = caller.Entity?.Name;
     var player = _playerManager.GetPlayer(client);
 
@@ -184,8 +213,11 @@ public partial class TrickDetect
     if (activator == null || caller == null || activator.DesignerName != "player")
       return HookResult.Continue;
 
-    var pawn = new CCSPlayerPawn(activator.Handle).Controller.Value!.Handle;
-    var client = new CCSPlayerController(pawn);
+    var playerPawn = new CCSPlayerPawn(activator.Handle);
+    if (!playerPawn.IsValid || playerPawn.Controller.Value == null || !playerPawn.Controller.Value.IsValid)
+      return HookResult.Continue;
+
+    var client = playerPawn.Controller.Value.As<CCSPlayerController>();
     var entName = caller.Entity?.Name;
     var player = _playerManager.GetPlayer(client);
 

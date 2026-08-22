@@ -5,7 +5,7 @@
     <RootNamespace>TrickDetect</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <!-- <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies> -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
@@ -16,14 +16,13 @@
   </ItemGroup>
 
   <!-- Добавляем задачу копирования файлов после сборки -->
-  <Target Name="CopyFilesAfterBuild" AfterTargets="Build" Condition="Exists('/run/media/evai/KINGSTON/Steam/game/csgo/addons/counterstrikesharp/plugins/TrickDetect')">
+  <Target Name="CopyFilesAfterBuild" AfterTargets="Build">
     <ItemGroup>
       <SourceFiles Include="$(OutputPath)**\*.*" />
     </ItemGroup>
 
-    <Copy SourceFiles="@(SourceFiles)" DestinationFolder="/run/media/evai/KINGSTON/Steam/game/csgo/addons/counterstrikesharp/plugins/TrickDetect/%(RecursiveDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
-
-    <Message Text="Files copied from $(OutputPath) to /run/media/evai/KINGSTON/Steam/game/csgo/addons/counterstrikesharp/plugins/TrickDetect." Importance="high" />
+    <Copy SourceFiles="@(SourceFiles)" DestinationFolder="$(MSBuildProjectDirectory)/output/%(RecursiveDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
+    <Message Text="Files copied to $(MSBuildProjectDirectory)/output/" Importance="high" />
   </Target> 
 
 </Project>

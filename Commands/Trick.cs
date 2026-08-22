@@ -17,14 +17,8 @@ partial class TrickDetect
       return;
 
     var player = _playerManager.GetPlayer(client);
-
-
-    // TODO
-    // if (!player.Permissions.Contains(Permission.UpdateTricks))
-    // {
-    // player.Client.PrintToChat($" {ChatColors.Purple} You dont have permission for this command!");
-    // return;
-    // }
+    if (player == null)
+      return;
 
     _mapManager.LoadAndSetAllMaps().Wait();
     var maps = _mapManager.GetAllMaps();
@@ -38,7 +32,7 @@ partial class TrickDetect
   public void OnSelectMap(CCSPlayerController client, CommandInfo command)
   {
     var pawn = client.PlayerPawn.Value;
-    if (pawn == null || command.ArgCount < 2)
+    if (pawn == null || !pawn.IsValid || command.ArgCount < 2)
       return;
 
     var map = _mapManager.GetMapByName(command.GetArg(1));
@@ -50,11 +44,13 @@ partial class TrickDetect
     }
 
     var player = _playerManager.GetPlayer(client);
+    if (player == null)
+      return;
 
     player.ResetTrickProgress();
     player.SavedLocations.Clear();
     player.SelectedMap = map;
-    player.Client.PlayerPawn.Value!.Teleport(map.Origin.ToVector(), null, null);
+    pawn.Teleport(map.Origin.ToVector(), null, null);
   }
 
   [ConsoleCommand("tricks", "Show all tricks for map")]
@@ -74,7 +70,9 @@ partial class TrickDetect
       return;
     }
 
-    var tricks = _trickManager.GetTricksByMap(map).allTricks!;
+    var tricks = _trickManager.GetTricksByMap(map)?.allTricks;
+    if (tricks == null)
+      return;
 
     if (trickName != null)
       tricks = tricks.Where(trick => trick.Name.Replace(" ", "_").ToLower().StartsWith(trickName)).ToArray();

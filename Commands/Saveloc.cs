@@ -7,9 +7,9 @@ namespace TrickDetect;
 
 partial class TrickDetect
 {
-  public void TeleportDelay(Player player)
+  public void TeleportDelay(Player? player)
   {
-    if (player.Teleporting)
+    if (player == null || player.Teleporting)
       return;
 
     player.Teleporting = true;
@@ -28,8 +28,11 @@ partial class TrickDetect
       return;
 
     var player = _playerManager.GetPlayer(client);
+    if (player == null)
+      return;
+
     player.SaveCurrentLocation();
-    player.Client.PrintToChat($" {ChatColors.Purple} Saved location {ChatColors.Grey}#{player.CurrentSavelocIndex}");
+    client.PrintToChat($" {ChatColors.Purple} Saved location {ChatColors.Grey}#{player.CurrentSavelocIndex}");
   }
 
   [ConsoleCommand("tploc", "Teleport to current saved location")]
@@ -42,6 +45,8 @@ partial class TrickDetect
       return;
 
     var player = _playerManager.GetPlayer(client);
+    if (player == null)
+      return;
 
     TeleportDelay(player);
   }
@@ -56,6 +61,8 @@ partial class TrickDetect
       return;
 
     var player = _playerManager.GetPlayer(client);
+    if (player == null)
+      return;
 
     if (player.SavedLocations.Count <= 1)
     {
@@ -71,7 +78,7 @@ partial class TrickDetect
 
 
     TeleportDelay(player);
-    player.Client.PrintToChat($" {ChatColors.Purple} Removed current location and switch to {ChatColors.Grey}#{player.CurrentSavelocIndex}");
+    client.PrintToChat($" {ChatColors.Purple} Removed current location and switch to {ChatColors.Grey}#{player.CurrentSavelocIndex}");
   }
 
   [ConsoleCommand("backloc", "Teleport to previous saved location")]
@@ -84,6 +91,8 @@ partial class TrickDetect
       return;
 
     var player = _playerManager.GetPlayer(client);
+    if (player == null)
+      return;
 
     if (player.SavedLocations.Count == 0)
     {
@@ -97,7 +106,7 @@ partial class TrickDetect
       player.CurrentSavelocIndex = player.SavedLocations.Count - 1;
 
     TeleportDelay(player);
-    player.Client.PrintToChat($" {ChatColors.Purple} Changed location to {ChatColors.Grey}#{player.CurrentSavelocIndex}");
+    client.PrintToChat($" {ChatColors.Purple} Changed location to {ChatColors.Grey}#{player.CurrentSavelocIndex}");
   }
 
   [ConsoleCommand("nextloc", "Teleport to next saved location")]
@@ -110,6 +119,8 @@ partial class TrickDetect
       return;
 
     var player = _playerManager.GetPlayer(client);
+    if (player == null)
+      return;
 
     if (player.SavedLocations.Count <= 1)
     {
@@ -119,7 +130,7 @@ partial class TrickDetect
 
     player.CurrentSavelocIndex = (player.CurrentSavelocIndex + 1) % player.SavedLocations.Count;
     TeleportDelay(player);
-    player.Client.PrintToChat($" {ChatColors.Purple} Changed location to {ChatColors.Grey}#{player.CurrentSavelocIndex}");
+    client.PrintToChat($" {ChatColors.Purple} Changed location to {ChatColors.Grey}#{player.CurrentSavelocIndex}");
   }
 
   [ConsoleCommand("clearloc", "Clear all saved location")]
@@ -132,10 +143,12 @@ partial class TrickDetect
       return;
 
     var player = _playerManager.GetPlayer(client);
+    if (player == null)
+      return;
 
     player.CurrentSavelocIndex = 0;
     player.SavedLocations.Clear();
-    player.Client.PrintToChat($" {ChatColors.Purple} All saved location removed");
+    client.PrintToChat($" {ChatColors.Purple} All saved location removed");
   }
 
   [ConsoleCommand("toloc", "To index saved location")]
@@ -148,6 +161,8 @@ partial class TrickDetect
       return;
 
     var player = _playerManager.GetPlayer(client);
+    if (player == null)
+      return;
 
     _ = int.TryParse(command.GetArg(1), out var index);
 
@@ -159,12 +174,8 @@ partial class TrickDetect
 
     var beforeIndex = player.CurrentSavelocIndex;
     player.CurrentSavelocIndex = index;
-    AddTimer(1.0f, () =>
-    {
-      // Return a value of type 'object' to satisfy the Func<object> requirement
-    });
 
     TeleportDelay(player);
-    player.Client.PrintToChat($" {ChatColors.Purple} Switch current location from {ChatColors.Grey}#{beforeIndex} to {ChatColors.Grey}#{index}");
+    client.PrintToChat($" {ChatColors.Purple} Switch current location from {ChatColors.Grey}#{beforeIndex} to {ChatColors.Grey}#{index}");
   }
 }

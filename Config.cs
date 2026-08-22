@@ -65,5 +65,5 @@ public class TrickDetectConfig : BasePluginConfig
   public int PreSpeed { get; set; } = 400;
 
   [JsonPropertyName("DefaultMap")]
-  public string DefaultMap { get; set; } = "ski2";
+  public string DefaultMap { get; set; } = "pastel";
 }

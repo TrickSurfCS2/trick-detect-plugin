@@ -30,7 +30,11 @@ public class ConnectionModule(PlayerManager playerManager, MapManager mapManager
 
                 Server.NextFrame(() =>
                 {
-                    player.Client.PlayerPawn.Value!.Teleport(map.Origin.ToVector(), null, null);
+                    var pawn = player.Client?.PlayerPawn?.Value;
+                    if (pawn != null && pawn.IsValid)
+                    {
+                        pawn.Teleport(map.Origin.ToVector(), null, null);
+                    }
                     Server.PrintToChatAll($" {ChatColors.Magenta}Игрок {e.Name} {ChatColors.White} подключается к серверу | {ChatColors.Gold}Очков: {points}");
                 });
 
@@ -44,19 +48,11 @@ public class ConnectionModule(PlayerManager playerManager, MapManager mapManager
 
     public void OnPlayerDisconnect(EventOnPlayerDisconnect e)
     {
-        if (e.SteamId == null)
-            return;
+        playerManager.RemovePlayer(e.Slot);
 
-        var client = Utilities.GetPlayerFromSlot(e.Slot);
-
-        if (client != null)
+        Server.NextFrame(() =>
         {
-            playerManager.RemovePlayer(client);
-
-            Server.NextFrame(() =>
-            {
-                Server.PrintToChatAll($" {ChatColors.Gold}Игрок {e.Name} {ChatColors.White} покидает сервер");
-            });
-        }
+            Server.PrintToChatAll($" {ChatColors.Gold}Игрок {e.Name} {ChatColors.White} покидает сервер");
+        });
     }
 }

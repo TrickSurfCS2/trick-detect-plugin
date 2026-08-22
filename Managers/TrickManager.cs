@@ -23,7 +23,14 @@ public class TrickManager(DB database)
 
   public void RouteChecker(Player player)
   {
+    if (player.SelectedMap == null)
+      return;
+
     MapTricks mapTricks = GetTricksByMap(player.SelectedMap);
+    if (mapTricks?.allTricks == null)
+      return;
+
+    var client = player.Client;
 
     if (string.IsNullOrEmpty(player.RouteTriggerPath))
     {
@@ -31,19 +38,56 @@ public class TrickManager(DB database)
       return;
     }
 
-    var containTricks = CheckRouteTrickMatching(mapTricks.allTricks, player, out Trick? matchingTrick);
+    var containTricks = CheckRouteTrickMatching(mapTricks.allTricks, player, out Trick? matchingTrick, out List<Trick> candidateTricks);
 
-    if (player.Debug)
+    if (player.DebugExtended)
     {
-      player.Client.PrintToConsole($"> {player.RouteTriggerPath}");
-      player.Client.PrintToConsole($"TotalContain > {containTricks}");
+      var triggersList = player.RouteTriggers.Select(t => t.TouchedTrigger.Name).ToList();
+      var pathStr = string.Join(" ➜ ", triggersList);
+
+      client?.PrintToChat($" {ChatColors.Purple}[DETECTOR]{ChatColors.Grey} Path ({triggersList.Count}): {ChatColors.Green}{pathStr}");
+      client?.PrintToChat($" {ChatColors.Purple}[DETECTOR]{ChatColors.Grey} StartType: {ChatColors.Yellow}{player.StartType}{ChatColors.Grey} | StartSpeed: {ChatColors.Yellow}{Math.Round(player.StartSpeed, 1)}{ChatColors.Grey} | Detect: {(containTricks > 0 ? $"{ChatColors.Green}ACTIVE ({containTricks} tricks)" : $"{ChatColors.Red}NO MATCHES")}");
+
+      if (candidateTricks.Count > 0)
+      {
+        foreach (var candidate in candidateTricks.Take(3))
+        {
+          var candTriggers = candidate.Triggers.Select(t => t.Name).ToList();
+          int currentStep = triggersList.Count;
+          string nextTarget = currentStep < candTriggers.Count ? candTriggers[currentStep] : "🏁 [COMPLETE]";
+          client?.PrintToChat($"  {ChatColors.Grey}• {ChatColors.Gold}{candidate.Name} {ChatColors.Grey}({currentStep}/{candTriggers.Count}) ➜ Next: {ChatColors.LightBlue}{nextTarget}");
+        }
+        if (candidateTricks.Count > 3)
+        {
+          client?.PrintToChat($"  {ChatColors.Grey}... and {candidateTricks.Count - 3} more trick(s)");
+        }
+      }
+    }
+    else if (player.Debug)
+    {
+      client?.PrintToConsole($"> {player.RouteTriggerPath}");
+      client?.PrintToConsole($"TotalContain > {containTricks}");
+      foreach (var cand in candidateTricks)
+      {
+        client?.PrintToConsole($"Contain > {cand.Name} | {cand.RouteTriggerPath} | {cand.Point} {cand.StartType}");
+      }
     }
 
     if (matchingTrick != null)
+    {
+      if (player.DebugExtended)
+      {
+        client?.PrintToChat($" {ChatColors.Gold}★ [DETECTOR] MATCH COMPLETED: {ChatColors.Green}{matchingTrick.Name} ({matchingTrick.Point} pts)!{ChatColors.Gold} ★");
+      }
       CompleteTrick(player, matchingTrick);
+    }
 
     if (containTricks == 0)
     {
+      if (player.DebugExtended)
+      {
+        client?.PrintToChat($" {ChatColors.Red}[DETECTOR] ✕ Route broken (0 matching tricks). Shifting window to Velocity...");
+      }
       player.StartType = StartType.Velocity;
       player.RouteTriggers.RemoveAt(0);
       RouteChecker(player);
@@ -52,18 +96,24 @@ public class TrickManager(DB database)
 
   public int CheckRouteTrickMatching(Trick[] tricks, Player player, out Trick? matchingTrick)
   {
+    return CheckRouteTrickMatching(tricks, player, out matchingTrick, out _);
+  }
+
+  public int CheckRouteTrickMatching(Trick[] tricks, Player player, out Trick? matchingTrick, out List<Trick> candidateTricks)
+  {
     int containTricks = 0;
     matchingTrick = null;
+    candidateTricks = new List<Trick>();
 
     foreach (var trick in tricks)
     {
       var trickRoute = trick.RouteTriggerPath;
+      if (string.IsNullOrEmpty(trickRoute))
+        continue;
 
       if ((trickRoute + ",").StartsWith(player.RouteTriggerPath + ",") && player.StartType == trick.StartType)
       {
-        if (player.Debug)
-          player.Client.PrintToConsole($"Contain > {trick.Name} | {trickRoute} | {trick.Point} {trick.StartType}");
-
+        candidateTricks.Add(trick);
         containTricks++;
 
         if (trickRoute == player.RouteTriggerPath)
@@ -96,9 +146,13 @@ public class TrickManager(DB database)
     var totalAvgSpeed = CalculateTotalAvgSpeed(player, trick);
     var totalTime = CalculateTotalTime(player, trick);
 
-    player.Client.PlayerPawn.Value!.HealthShotBoostExpirationTime = Server.CurrentTime + 1;
-    Utilities.SetStateChanged(player.Client.PlayerPawn.Value, "CCSPlayerPawn", "m_flHealthShotBoostExpirationTime");
-    player.Client.ExecuteClientCommand("play sounds\\weapons\\flashbang\\flashbang_explode1_distant.vsnd_c");
+    var pawn = player.Client?.PlayerPawn?.Value;
+    if (pawn != null && pawn.IsValid)
+    {
+      pawn.HealthShotBoostExpirationTime = Server.CurrentTime + 1;
+      Utilities.SetStateChanged(pawn, "CCSPlayerPawn", "m_flHealthShotBoostExpirationTime");
+      player.Client?.ExecuteClientCommand("play sounds\\weapons\\flashbang\\flashbang_explode1_distant.vsnd_c");
+    }
 
     var completeId = await InsertComplete(trick, player, totalAvgSpeed, totalTime);
     var wr = await SelectTrickWR(trick.Id);
@@ -112,14 +166,14 @@ public class TrickManager(DB database)
     Server.NextFrame(() =>
     {
       if (player.Debug)
-        player.Client.PrintToConsole($"CompleteId {completeId}");
+        player.Client?.PrintToConsole($"CompleteId {completeId}");
 
       if (isWR)
-        player.Client.ExecuteClientCommand("play sounds/ambient/ambience/rainscapes/thunder_close01.vsnd_c");
+        player.Client?.ExecuteClientCommand("play sounds/ambient/ambience/rainscapes/thunder_close01.vsnd_c");
 
-      player.Client.PrintToChat(trickMessage);
-      player.Client.PrintToChat(timeMessage);
-      player.Client.PrintToChat(speedMessage);
+      player.Client?.PrintToChat(trickMessage);
+      player.Client?.PrintToChat(timeMessage);
+      player.Client?.PrintToChat(speedMessage);
     });
   }
 

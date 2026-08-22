@@ -58,6 +58,7 @@ public class Player
   public Permission[] Permissions { get; set; }
   public bool ShowHud { get; set; } = true;
   public bool Debug { get; set; } = false;
+  public bool DebugExtended { get; set; } = false;
 
   // === Trick data === //
   public List<RouteTrigger> RouteTriggers { get; set; }
@@ -68,20 +69,31 @@ public class Player
   public string RouteTriggerPath => RouteTriggers.Any() ? string.Join(",", RouteTriggers.Select(t => t.TouchedTrigger.Name)) : string.Empty;
   // ================== //
 
-  public CCSPlayerController Client => Utilities.GetPlayerFromSlot(Slot)!;
+  public CCSPlayerController? Client => Utilities.GetPlayerFromSlot(Slot);
 
   public void SaveCurrentLocation()
   {
-    var location = Client.GetLocation();
+    var client = Client;
+    if (!Helpers.ClientIsValidAndAlive(client))
+      return;
+
+    var location = client.GetLocation();
+    if (location == null)
+      return;
+
     SavedLocations.Add(location);
     CurrentSavelocIndex = SavedLocations.Count - 1;
   }
 
   public void TeleportToSavedLocation()
   {
+    var client = Client;
+    if (!Helpers.ClientIsValidAndAlive(client))
+      return;
+
     if (SavedLocations.Count == 0)
     {
-      Client.PrintToChat($"{ChatColors.White}No saveloc's");
+      client?.PrintToChat($"{ChatColors.White}No saveloc's");
       return;
     }
 
@@ -89,28 +101,36 @@ public class Player
 
     ResetTrickProgress();
 
-    Client.PlayerPawn.Value!.Teleport(
+    var pawn = client?.PlayerPawn?.Value;
+    if (pawn == null || !pawn.IsValid)
+      return;
+
+    var targetAngle = new QAngle(location.angle.X, location.angle.Y, 0f);
+
+    pawn.Teleport(
       location.origin.ToVector(),
-      location.angle.ToQAngle(),
+      targetAngle,
       location.velocity.ToVector()
     );
 
     if (Debug)
-      Client.PrintToChat($"{ChatColors.Grey}Teleported");
-  }
-
-  private void AddTimer(float v, Func<object> value, object rEPEAT)
-  {
-    throw new NotImplementedException();
+      client?.PrintToChat($"{ChatColors.Grey}Teleported");
   }
 
   public void CollectPlayerProgress()
   {
-    var location = Client.GetLocation();
+    var client = Client;
+    if (!Helpers.ClientIsValidAndAlive(client))
+      return;
+
+    var location = client.GetLocation();
+    if (location == null)
+      return;
+
     var progress = new PlayerProgress
     {
       Location = location,
-      Speed = Client.GetSpeed()
+      Speed = client.GetSpeed()
     };
 
     PlayerProgressData.Add(progress);
@@ -118,8 +138,12 @@ public class Player
 
   public void SetupStartSpeed()
   {
-    var speed = Client.GetSpeed();
-    var maxSpeed = TrickDetect._cfg!.PreSpeed;
+    var client = Client;
+    if (!Helpers.ClientIsValidAndAlive(client))
+      return;
+
+    var speed = client.GetSpeed();
+    var maxSpeed = TrickDetect._cfg?.PreSpeed ?? 400;
 
     StartSpeed = speed;
     StartType = speed < maxSpeed

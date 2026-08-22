@@ -10,31 +10,53 @@ public class TrickRouteModule(PlayerManager playerManager, TriggerManager trigge
     public void OnPlayerStartTouch(EventOnStartTouchEvent e)
     {
         var player = e.Player;
+        var client = player.Client;
+        if (!Helpers.ClientIsValidAndAlive(client) || player.SelectedMap == null)
+            return;
+
         var triggerName = e.TriggerName;
+        if (string.IsNullOrEmpty(triggerName))
+            return;
+
         var mapTriggers = triggerManager.GetTriggersByMap(player.SelectedMap);
         var trigger = mapTriggers.FirstOrDefault((trigger) => trigger.Name == triggerName);
 
-        if (player.Debug)
-            player.Client.PrintToChat($"{ChatColors.Grey} StartTouch - {ChatColors.Purple} {triggerName} {trigger?.Id.ToString() ?? "❌"}");
-
-        if (triggerName!.StartsWith("boost"))
+        if (player.DebugExtended)
         {
-            int[] velocity = triggerName.Split("-")[1].Split("_")
-                            .Select(int.Parse)
-                            .ToArray();
-
-            Server.NextFrame(() =>
-            {
-                player.Client.PlayerPawn.Value!.Teleport(
-                    null,
-                    null,
-                    new Vector(velocity[0], velocity[1], velocity[2])
-                );
-                player.StartType = StartType.Velocity;
-            });
+            var speed = Math.Round(client?.PlayerPawn?.Value?.AbsVelocity?.Length2D() ?? 0, 1);
+            client?.PrintToChat($" {ChatColors.Green}[START-TOUCH]{ChatColors.Grey} {triggerName} #{trigger?.Id.ToString() ?? "❌"} {ChatColors.Yellow}[{speed} u/s]");
+        }
+        else if (player.Debug)
+        {
+            client?.PrintToChat($"{ChatColors.Grey} StartTouch - {ChatColors.Purple} {triggerName} {trigger?.Id.ToString() ?? "❌"}");
         }
 
-        if (trigger == null || player.Client.Pawn.Value!.MoveType == MoveType_t.MOVETYPE_NOCLIP)
+        if (triggerName.StartsWith("boost"))
+        {
+            var parts = triggerName.Split("-");
+            if (parts.Length > 1)
+            {
+                var velocity = parts[1].Split("_")
+                                .Select(int.Parse)
+                                .ToArray();
+
+                Server.NextFrame(() =>
+                {
+                    var pawn = player.Client?.PlayerPawn?.Value;
+                    if (pawn != null && pawn.IsValid)
+                    {
+                        pawn.Teleport(
+                            null,
+                            null,
+                            new Vector(velocity[0], velocity[1], velocity[2])
+                        );
+                        player.StartType = StartType.Velocity;
+                    }
+                });
+            }
+        }
+
+        if (trigger == null || client?.PlayerPawn?.Value?.MoveType == MoveType_t.MOVETYPE_NOCLIP)
             return;
 
         var routeTrigger = new RouteTrigger
@@ -42,7 +64,7 @@ public class TrickRouteModule(PlayerManager playerManager, TriggerManager trigge
             TouchedTrigger = trigger,
             TimeStartTouch = Server.CurrentTime,
             TimeEndTouch = null,
-            ProgressStartTouch = player.PlayerProgressData,
+            ProgressStartTouch = player.PlayerProgressData.ToList(),
             ProgressEndTouch = null
         };
         player.PlayerProgressData = [];
@@ -54,14 +76,28 @@ public class TrickRouteModule(PlayerManager playerManager, TriggerManager trigge
     public void OnPlayerEndTouch(EventOnEndTouchEvent e)
     {
         var player = e.Player;
+        var client = player.Client;
+        if (!Helpers.ClientIsValidAndAlive(client) || player.SelectedMap == null)
+            return;
+
         var triggerName = e.TriggerName;
+        if (string.IsNullOrEmpty(triggerName))
+            return;
+
         var mapTriggers = triggerManager.GetTriggersByMap(player.SelectedMap);
         var trigger = mapTriggers.FirstOrDefault((trigger) => trigger.Name == triggerName);
 
-        if (player.Debug)
-            player.Client.PrintToChat($"{ChatColors.Grey} StartTouch - {ChatColors.Purple} {triggerName} {trigger?.Id.ToString() ?? "❌"}");
+        if (player.DebugExtended)
+        {
+            var speed = Math.Round(client?.PlayerPawn?.Value?.AbsVelocity?.Length2D() ?? 0, 1);
+            client?.PrintToChat($" {ChatColors.Red}[END-TOUCH]{ChatColors.Grey} {triggerName} #{trigger?.Id.ToString() ?? "❌"} {ChatColors.Yellow}[{speed} u/s]");
+        }
+        else if (player.Debug)
+        {
+            client?.PrintToChat($"{ChatColors.Grey} EndTouch - {ChatColors.Purple} {triggerName} {trigger?.Id.ToString() ?? "❌"}");
+        }
 
-        if (trigger == null || player.Client.Pawn.Value!.MoveType == MoveType_t.MOVETYPE_NOCLIP)
+        if (trigger == null || client?.PlayerPawn?.Value?.MoveType == MoveType_t.MOVETYPE_NOCLIP)
             return;
 
         if (player.RouteTriggers.Count == 0)
@@ -71,7 +107,7 @@ public class TrickRouteModule(PlayerManager playerManager, TriggerManager trigge
                 TouchedTrigger = trigger,
                 TimeStartTouch = null,
                 TimeEndTouch = Server.CurrentTime,
-                ProgressEndTouch = player.PlayerProgressData,
+                ProgressEndTouch = player.PlayerProgressData.ToList(),
                 ProgressStartTouch = null
             };
 
@@ -90,7 +126,7 @@ public class TrickRouteModule(PlayerManager playerManager, TriggerManager trigge
                 return;
 
             previousTrigger.TimeEndTouch ??= Server.CurrentTime;
-            previousTrigger.ProgressEndTouch ??= player.PlayerProgressData;
+            previousTrigger.ProgressEndTouch ??= player.PlayerProgressData.ToList();
         }
         player.PlayerProgressData = [];
     }
@@ -98,6 +134,9 @@ public class TrickRouteModule(PlayerManager playerManager, TriggerManager trigge
     public void OnPlayerJump(EventOnJump e)
     {
         var player = e.Player;
+        var client = player.Client;
+        if (!Helpers.ClientIsValidAndAlive(client))
+            return;
 
         if (player.RouteTriggers.Count == 0)
         {
@@ -105,8 +144,14 @@ public class TrickRouteModule(PlayerManager playerManager, TriggerManager trigge
             player.IsJumped = true;
         }
 
-        if (player.Debug)
-            player.Client.PrintToConsole($"OnEventPlayerJump");
+        if (player.DebugExtended)
+        {
+            client?.PrintToChat($" {ChatColors.Purple}[JUMP]{ChatColors.Grey} Registered | StartSpeed: {ChatColors.Yellow}{Math.Round(player.StartSpeed, 1)}{ChatColors.Grey} | Type: {ChatColors.Yellow}{player.StartType}");
+        }
+        else if (player.Debug)
+        {
+            client?.PrintToConsole($"OnEventPlayerJump");
+        }
     }
 
     public void OnTick(EventOnTickEvent _)
@@ -115,6 +160,9 @@ public class TrickRouteModule(PlayerManager playerManager, TriggerManager trigge
 
         foreach (var player in players)
         {
+            if (!Helpers.ClientIsValidAndAlive(player.Client))
+                continue;
+
             if (!string.IsNullOrEmpty(player.RouteTriggerPath) && player.PlayerProgressData.Count < 1000000)
                 player.CollectPlayerProgress();
             else if (player.PlayerProgressData.Count > 0)
@@ -127,7 +175,7 @@ public class TrickRouteModule(PlayerManager playerManager, TriggerManager trigge
         var player = e.Player;
 
         player.ResetTrickProgress();
-        player.Client.HideLegs();
+        player.Client?.HideLegs();
     }
 
     public void OnPlayerDeath(EventOnDeath e)

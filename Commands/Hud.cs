@@ -16,9 +16,12 @@ partial class TrickDetect
       return;
 
     var player = _playerManager.GetPlayer(client);
+    if (player == null)
+      return;
+
     var newValue = !player.ShowHud;
 
     player.ShowHud = newValue;
-    player.Client.PrintToChat($" {ChatColors.Purple} Hud is {ChatColors.Grey} {(newValue ? "showed" : "hidden")}");
+    client.PrintToChat($" {ChatColors.Purple} Hud is {ChatColors.Grey} {(newValue ? "showed" : "hidden")}");
   }
 }
